@@ -26,7 +26,7 @@ def event_detection(transcription: List[Dict[str, any]]) -> List[Dict[str, float
         temperature=0.7
     )
     output = json.loads(completion.completion_message.content.text)
-    return output.events
+    return output["events"]
 
 
 demo = [
