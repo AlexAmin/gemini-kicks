@@ -3,9 +3,9 @@ import json
 from typing import List, Dict
 from llama_api_client import LlamaAPIClient
 from pydantic_core.core_schema import json_schema
-from schemas.basketball_events_schema import BASKETBALL_EVENTS_SCHEMA
 from type.basketball_event import BasketballEvent
 from util.load_prompt_file import load_prompt_file
+from schemas.basketball_events_schema import BASKETBALL_EVENTS_SCHEMA
 
 client = LlamaAPIClient(api_key=os.environ.get("LLAMA_API_KEY"))
 

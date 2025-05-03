@@ -44,5 +44,4 @@ def create_16khz_mono_wav_from_video(path, start_time, end_time, working_dir):
         raise RuntimeError(f"ffmpeg failed: {result.stderr}")
     if not os.path.isfile(output_path):
         raise FileNotFoundError(f"Output file was not created: {output_path}")
-    print(f"Audio segment created: {output_path}")
     return output_path
