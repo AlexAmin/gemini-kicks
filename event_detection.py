@@ -9,37 +9,6 @@ client = LlamaAPIClient(
     api_key=os.environ.get("LLAMA_API_KEY"),  # This is the default and can be omitted
 )
 
-schema = {
-    "type": "json_schema",
-    "json_schema": {
-        "schema": {
-            "properties": {
-                "trainOfThought": {"type": "array", "items": {"type": "string"}},
-                "events": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "type": {
-                                "type": "string",
-                                "enum": ["Free Throw", "Foul", "Steal", "Turnover", "Timeout", "Substitution"],
-                                "description": "What type of event is it?"
-                            },
-                            "timestamp": {
-                                "type": "number",
-                                "description": "The input phrase that made you decide that there was an event. Minimum 5 words."
-                            }
-                        },
-                        "required": ["type", "timestamp"]
-                    }},
-            },
-            "required": ["trainOfThought", "events"],
-            "type": "object"
-        }
-    }
-}
-
-
 def event_detection(transcription: List[Dict[str, any]]) -> List[Dict[str, float]]:
     completion = client.chat.completions.create(
         model="Llama-4-Maverick-17B-128E-Instruct-FP8",

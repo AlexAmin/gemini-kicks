@@ -30,4 +30,5 @@ def speech_to_text(file_path: str, offset_start: float) -> List[Dict[str, any]]:
         print(f"Transcription took {end_time - start_time:.2f} seconds")
         return get_segments_array(transcription, offset_start)
 
-# transcribe("basketball-60-sec.flac")
+if __name__ == "__main__":
+    speech_to_text("basketball-60-sec.flac", 0)
