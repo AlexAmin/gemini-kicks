@@ -45,3 +45,17 @@ def create_16khz_mono_wav_from_video(path, start_time, end_time, working_dir):
     if not os.path.isfile(output_path):
         raise FileNotFoundError(f"Output file was not created: {output_path}")
     return output_path
+
+
+def clip_segment(input_path, start_time, end_time, output_path):
+    cmd = [
+        "ffmpeg",
+        "-ss", str(start_time),
+        "-to", str(end_time),
+        "-i", input_path,
+        "-c", "copy",
+        output_path
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        print("Error occurred:", result.stderr)

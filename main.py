@@ -5,7 +5,7 @@ from typing import List, Dict
 from event_detection import detect
 from models.basketball_event import BasketballEvent
 from speech_to_text import transcribe
-from utils import get_video_duration_in_seconds, create_16khz_mono_wav_from_video
+from utils import get_video_duration_in_seconds, create_16khz_mono_wav_from_video, clip_segment
 
 def publish_clip(clip_local_path):
     # publish clips to configured distribution channels
@@ -15,11 +15,14 @@ def publish_clip(clip_local_path):
         'message': 'Clip published successfully.'
     }
 
-def produce_highlight_clip(input_path, highlight: List[BasketballEvent], clip_local_path):
+def produce_highlight_clip(input_path, highlights: List[BasketballEvent], clip_local_path):
     # encode video clips using ffmpeg
-    # CODE
+    earlist_start = min([highlight['start'] for highlight in highlights])
+    latest_end = max([highlight['end'] for highlight in highlights])
+    # ffmpeg command to extract the highlights
+    clip_segment(input_path, earlist_start, latest_end, clip_local_path)
     # return clip local path
-    print(f"Produced highlight clip: {clip_local_path} and found {len(highlight)} highlights")
+    print(f"Produced highlight clip: {clip_local_path} and found {len(highlights)} highlights")
 
 
 def process_video(input_path: str, working_dir: str):
@@ -49,13 +52,12 @@ def process_video(input_path: str, working_dir: str):
         transcript = transcribe(chunk_path, offset_start)
 
         # detect highlights in rolling window to identify key moments
-        highlights = detect(transcript)
-        for highlight in highlights:
-            # encode video clips using ffmpeg
-            clip_local_path = os.path.join(working_dir, 'clip.mp4')
-            produce_highlight_clip(input_path, highlight, clip_local_path)
-            # public clips to configured distribution channels
-            publish_clip(clip_local_path)
+        highlights = detect(transcript, offset_start)
+        # encode video clips using ffmpeg
+        clip_local_path = os.path.join(working_dir, 'clip.mp4')
+        produce_highlight_clip(input_path, highlights, clip_local_path)
+        # public clips to configured distribution channels
+        publish_clip(clip_local_path)
 
         # update offset start for next rolling window
         offset_start += window_duration_in_seconds

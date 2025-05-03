@@ -13,7 +13,7 @@ from util.load_prompt_file import load_prompt_file
 client = LlamaAPIClient(api_key=os.environ.get("LLAMA_API_KEY"))
 
 
-def detect(transcription: List[TranscriptionSegment]) -> List[BasketballEvent]:
+def detect(transcription: List[TranscriptionSegment], offset: float) -> List[BasketballEvent]:
     transcription_json = json.dumps([item.to_dict() for item in transcription])
     prompt = load_prompt_file("prompts/basketball_event_detection_prompt.md")
     completion = client.chat.completions.create(
@@ -36,5 +36,5 @@ def detect(transcription: List[TranscriptionSegment]) -> List[BasketballEvent]:
 
 
 if __name__ == "__main__":
-    result = detect(demo_transcript)
+    result = detect(demo_transcript, 0.0)
     print(result)
