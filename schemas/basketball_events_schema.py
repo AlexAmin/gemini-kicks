@@ -1,4 +1,4 @@
-from types.basketball_event import BasketballEvent
+from type.basketball_event import BasketballEvent
 
 BASKETBALL_EVENTS_SCHEMA = {
     "type": "json_schema",
