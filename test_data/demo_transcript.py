@@ -1,4 +1,9 @@
-demo_transcript = [
+from typing import List
+from dataclasses import dataclass
+
+from models.transcription_segment import TranscriptionSegment
+
+demo_transcript: List[TranscriptionSegment] = [TranscriptionSegment(**item) for item in [
     {
         "timestamp": 60,
         "text": " und die Beine von K\u00f6ln."
@@ -75,4 +80,4 @@ demo_transcript = [
         "timestamp": 117,
         "text": " und Callison und ein bisschen John Bryant."
     }
-]
+]]
