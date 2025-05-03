@@ -1,29 +1,22 @@
 import os
 import json
 from typing import List, Dict
-
 from llama_api_client import LlamaAPIClient
 from pydantic_core.core_schema import json_schema
+from schemas.basketball_events_schema import BASKETBALL_EVENTS_SCHEMA
+from types.basketball_event import BasketballEvent
+from util.load_prompt_file import load_prompt_file
 
-client = LlamaAPIClient(
-    api_key=os.environ.get("LLAMA_API_KEY"),  # This is the default and can be omitted
-)
+client = LlamaAPIClient(api_key=os.environ.get("LLAMA_API_KEY"))
 
 def event_detection(transcription: List[Dict[str, any]]) -> List[Dict[str, float]]:
     completion = client.chat.completions.create(
         model="Llama-4-Maverick-17B-128E-Instruct-FP8",
-        response_format=schema,
+        response_format=BASKETBALL_EVENTS_SCHEMA,
         messages=[
             {
                 "role": "system",
-                "content": """Analyze the following text and detect any basketball events. The possible events are:
-            - Free Throw: When a player attempts to score by shooting from the free-throw line after a foul
-            - Foul: When a player breaks the rules resulting in a penalty
-            - Steal: When a defensive player takes the ball from the offensive player
-            - Turnover: When a team loses possession of the ball to the opposing team
-            - Timeout: When a team or official stops the game temporarily
-            - Substitution: When a player is replaced by another player from the bench
-            """
+                "content": load_prompt_file("prompts/basketball_event_detection_prompt.md")
             },
             {
                 "role": "user",
