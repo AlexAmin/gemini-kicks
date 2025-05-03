@@ -1,5 +1,6 @@
 import os
 import argparse
+import tempfile
 from utils import get_video_duration_in_seconds, create_16khz_mono_wav_from_video
 
 def transcribe(chunk_local_path, offset_start):
@@ -39,6 +40,9 @@ def process_video(input_path, working_dir):
     # very input video file and working directory
     assert input_path is not None, "Input video file is required."
     assert os.path.isfile(input_path), f"Input video file '{input_path}' does not exist."
+    if working_dir is None:
+        working_dir = tempfile.gettempdir()
+        assert os.path.isdir(working_dir), f"Working directory '{working_dir}' does not exist."
 
     # loop thorugh video using a rolling window    
     offset_start = 0.0
