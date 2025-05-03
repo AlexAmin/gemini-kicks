@@ -4,6 +4,6 @@ from models.basketball_event import BasketballEvent
 
 @dataclass
 class DetectionResult:
-    trainOfThouhgt: str
+    trainOfThought: str
     events: List[BasketballEvent]
     

@@ -16,14 +16,22 @@ def publish_clip(clip_local_path):
         'message': 'Clip published successfully.'
     }
 
-def produce_highlight_clip(input_path, highlights: List[BasketballEvent], clip_local_path):
+def produce_highlight_clip(input_path, highlights: List[BasketballEvent], working_dir: str):
+    # return if no highlights are found
+    if len(highlights) == 0: return
     # encode video clips using ffmpeg
-    earlist_start = min([highlight['start'] for highlight in highlights])
-    latest_end = max([highlight['end'] for highlight in highlights])
+    earlist_start = min([highlight['timestamp'] for highlight in highlights])
+    earlist_start = earlist_start - 15 if earlist_start - 15 > 0 else 0
+    latest_end = max([highlight['timestamp'] for highlight in highlights]) + 15
     # ffmpeg command to extract the highlights
-    clip_segment(input_path, earlist_start, latest_end, clip_local_path)
+    event_names = [highlight['type'] for highlight in highlights]
+    event_names = '_'.join(event_names)
+    file_name = f"clip_{earlist_start}_{latest_end}_{event_names}.mp4"
+    full_path = os.path.join(working_dir, file_name)
+    clip_segment(input_path, earlist_start, latest_end, full_path)
     # return clip local path
-    print(f"Produced highlight clip: {clip_local_path} and found {len(highlights)} highlights")
+    print(f"Produced highlight clip: {full_path} and found {len(highlights)} highlights")
+    return full_path
 
 
 def process_video(input_path: str, working_dir: str):
@@ -58,11 +66,10 @@ def process_video(input_path: str, working_dir: str):
         highlights = detect(transcript, offset_start)
 
         # encode video clips using ffmpeg
-        clip_local_path = os.path.join(working_dir, 'clip.mp4')
-        produce_highlight_clip(input_path, highlights, clip_local_path)
+        clip_path = produce_highlight_clip(input_path, highlights.events, working_dir)
         
         # public clips to configured distribution channels
-        publish_clip(clip_local_path)
+        publish_clip(clip_path)
 
         # update offset start for next rolling window
         offset_start += window_duration_in_seconds

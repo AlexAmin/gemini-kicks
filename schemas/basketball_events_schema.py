@@ -18,11 +18,10 @@ BASKETBALL_EVENTS_SCHEMA = {
                             },
                             "confidence": {
                                 "type": "number",
-                                "description": "0 no confidence. 1 maximum confidence"
+                                "description": "0.0 no confidence. 1.0 maximum confidence"
                             },
                             "timestamp": {
-                                "type": "number",
-                                "description": "The input phrase that made you decide that there was an event. Minimum 5 words."
+                                "type": "number"
                             }
                         },
                         "required": ["type", "confidence", "timestamp"]
