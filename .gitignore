@@ -7,7 +7,7 @@ __pycache__/
 *.mp4
 *.iml
 .idea
-
+*.wav
 # C extensions
 *.so
 

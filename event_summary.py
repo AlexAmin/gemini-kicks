@@ -46,5 +46,5 @@ def highlight_summary(transcripts: List[TranscriptionSegment], length=SummaryLen
     return output
 
 if __name__ == "__main__":
-    result = highlight_summary(demo_transcript, SummaryLength.LONG)
+    result = highlight_summary(demo_transcript, SummaryLength.MEDIUM)
     print(result)
