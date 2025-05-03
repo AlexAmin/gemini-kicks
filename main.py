@@ -4,9 +4,13 @@ import tempfile
 from typing import List
 from os.path import join as path_join
 from event_detection import detect
+from models.transcription_segment import TranscriptionSegment
 from speech_to_text import transcribe
 from models.basketball_event import BasketballEvent
-from utils import get_video_duration_in_seconds, create_16khz_mono_wav_from_video, clip_segment
+from text_to_speech import text_to_speech
+from utils import get_video_duration_in_seconds, create_16khz_mono_wav_from_video, clip_segment, \
+    get_transcripts_for_highlights
+
 
 def publish_clip(clip_local_path):
     # publish clips to configured distribution channels
@@ -52,10 +56,16 @@ def process_video(input_path: str, working_dir: str):
             working_dir)
 
         # transcribe audio chunk using groq API
-        transcript = transcribe(chunk_path, offset_start)
+        transcript: List[TranscriptionSegment] = transcribe(chunk_path, offset_start)
 
         # detect highlights in rolling window to identify key moments
-        highlights = detect(transcript, offset_start)
+        highlights: List[BasketballEvent] = detect(transcript, offset_start)
+
+        # Find the text segments relevant to these highlights
+        highlight_transcripts: List[TranscriptionSegment] = get_transcripts_for_highlights(transcript, highlights)
+        if highlight_transcripts:
+            tts_path = text_to_speech(' '.join(segment.text for segment in highlight_transcripts))
+            print(tts_path)
 
         # encode video clips using ffmpeg
         clip_local_path = os.path.join(working_dir, 'clip.mp4')
