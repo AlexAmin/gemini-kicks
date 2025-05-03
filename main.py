@@ -24,11 +24,11 @@ def produce_highlight_clip(input_path, highlights: List[BasketballEvent], workin
     # return if no highlights are found
     if len(highlights) == 0: return
     # encode video clips using ffmpeg
-    earlist_start = min([highlight['timestamp'] for highlight in highlights])
+    earlist_start = min([highlight.timestamp for highlight in highlights])
     earlist_start = earlist_start - 15 if earlist_start - 15 > 0 else 0
-    latest_end = max([highlight['timestamp'] for highlight in highlights]) + 15
+    latest_end = max([highlight.timestamp for highlight in highlights]) + 15
     # ffmpeg command to extract the highlights
-    event_names = [highlight['type'] for highlight in highlights]
+    event_names = [highlight.type for highlight in highlights]
     event_names = '_'.join(event_names)
     file_name = f"clip_{earlist_start}_{latest_end}_{event_names}.mp4"
     full_path = os.path.join(working_dir, file_name)
@@ -69,6 +69,10 @@ def process_video(input_path: str, working_dir: str):
         # detect highlights in rolling window to identify key moments
         highlights: List[BasketballEvent] = detect(transcript, offset_start)
 
+        # Dont continue if there are no highlights
+        if len(highlights) == 0:
+            continue
+
         # Find the text segments relevant to these highlights
         highlight_transcripts: List[TranscriptionSegment] = get_transcripts_for_highlights(transcript, highlights)
         if highlight_transcripts:
@@ -76,7 +80,7 @@ def process_video(input_path: str, working_dir: str):
             print(tts_path)
 
         # encode video clips using ffmpeg
-        clip_path = produce_highlight_clip(input_path, highlights.events, working_dir)
+        clip_path = produce_highlight_clip(input_path, highlights, working_dir)
         
         # public clips to configured distribution channels
         publish_clip(clip_path)
@@ -98,6 +102,7 @@ def parse_cli_args():
     parser.add_argument('-input', nargs='?', default='lakers_mavs_20250409.mp4', help='Input video of an NBA match.')
     parser.add_argument('-wd', nargs='?', default=ensure_llama_hoops_dir(), help='Data working directory.')
     args = parser.parse_args()
+    print(args)
     return args
 
 

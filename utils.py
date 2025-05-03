@@ -71,9 +71,6 @@ def clip_segment(input_path, start_time, end_time, output_path):
         print("Error occurred:", result.stderr)
 
 def get_timestamp_range(highlights: List[BasketballEvent]) -> tuple[float, float]:
-    if not highlights:
-        return [None, None]
-
     timestamps = [event.timestamp for event in highlights]
     return min(timestamps), max(timestamps)
 
