@@ -4,6 +4,8 @@ import tempfile
 from typing import List
 from os.path import join as path_join
 from event_detection import detect
+from event_summary import highlight_summary
+from models.summary_length import SummaryLength
 from models.transcription_segment import TranscriptionSegment
 from speech_to_text import transcribe
 from models.basketball_event import BasketballEvent
@@ -20,7 +22,7 @@ def publish_clip(clip_local_path):
         'message': 'Clip published successfully.'
     }
 
-def produce_highlight_clip(input_path, highlights: List[BasketballEvent], working_dir: str):
+def produce_highlight_clip(input_path, highlights: List[BasketballEvent], tts_file_path: str, working_dir: str):
     # return if no highlights are found
     if len(highlights) == 0: return
     # encode video clips using ffmpeg
@@ -32,7 +34,7 @@ def produce_highlight_clip(input_path, highlights: List[BasketballEvent], workin
     event_names = '_'.join(event_names)
     file_name = f"clip_{earlist_start}_{latest_end}_{event_names}.mp4"
     full_path = os.path.join(working_dir, file_name)
-    clip_segment(input_path, earlist_start, latest_end, full_path)
+    clip_segment(input_path, earlist_start, latest_end, tts_file_path, full_path)
     # return clip local path
     print(f"Produced highlight clip: {full_path} and found {len(highlights)} highlights")
     return full_path
@@ -75,12 +77,15 @@ def process_video(input_path: str, working_dir: str):
 
         # Find the text segments relevant to these highlights
         highlight_transcripts: List[TranscriptionSegment] = get_transcripts_for_highlights(transcript, highlights)
-        if highlight_transcripts:
-            tts_path = text_to_speech(' '.join(segment.text for segment in highlight_transcripts))
-            print(tts_path)
+
+        # Generate a clean summary for tts
+        summary = highlight_summary(highlight_transcripts, SummaryLength.MEDIUM)
+
+        # Generate TTS
+        tts_path = text_to_speech(summary)
 
         # encode video clips using ffmpeg
-        clip_path = produce_highlight_clip(input_path, highlights, working_dir)
+        clip_path = produce_highlight_clip(input_path, highlights, tts_path, working_dir)
         
         # public clips to configured distribution channels
         publish_clip(clip_path)

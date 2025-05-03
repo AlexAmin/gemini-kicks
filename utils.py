@@ -57,18 +57,26 @@ def create_16khz_mono_wav_from_video(path, start_time, end_time, working_dir):
     return output_path
 
 
-def clip_segment(input_path, start_time, end_time, output_path):
+def clip_segment(input_path, start_time, end_time, audio_path: str, output_path):
+    if not os.path.exists(audio_path):
+        raise FileNotFoundError(f"Audio file not found: {audio_path}")
+
     cmd = [
         "ffmpeg",
         "-ss", str(start_time),
         "-to", str(end_time),
         "-i", input_path,
-        "-c", "copy",
+        "-i", audio_path,
+        "-map", "0:v",  # take video from first input
+        "-map", "1:a",  # take audio from second input
+        "-c:v", "copy",  # copy video codec
+        "-y",  # overwrite output file
         output_path
     ]
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
-        print("Error occurred:", result.stderr)
+        raise RuntimeError(f"FFmpeg failed with error: {result.stderr}")
+
 
 def get_timestamp_range(highlights: List[BasketballEvent]) -> tuple[float, float]:
     timestamps = [event.timestamp for event in highlights]

@@ -22,7 +22,6 @@ def transcribe(file_path: str, offset_start: float) -> List[TranscriptionSegment
         transcription = client.audio.transcriptions.create(
             file=file,
             model="whisper-large-v3-turbo",
-            prompt="Specify context or spelling",
             response_format="verbose_json",
             timestamp_granularities=["segment"],
             language="en",
