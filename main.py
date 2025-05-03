@@ -1,26 +1,20 @@
 import os
 import argparse
 import tempfile
+from typing import List, Dict
+
+from event_detection import event_detection
+from speech_to_text import speech_to_text
 from utils import get_video_duration_in_seconds, create_16khz_mono_wav_from_video
 
-def transcribe(chunk_local_path, offset_start):
-    # load local chunk of audio that represents a rolling window of audio stream
-    # CODE
-    # transcribe audio chunk using groq API
-    # CODE
-    # return transcription
-    return { 
-        'transcript': [] 
-    }
 
-def detect_highlights(transcript):
-    # detect highlights in transcript
-    # CODE
-    # return highlights (include type and timestamp)
-    # CODE
-    return {
-        'highlights': []
-    }
+def transcribe(chunk_local_path: str, offset_start: float) -> List[Dict[str, any]]:
+    return speech_to_text(chunk_local_path, offset_start)
+
+
+def detect_highlights(transcript: List[Dict[str, any]]) -> List[Dict[str, float]]:
+    return event_detection(transcript)
+
 
 def publish_clip(clip_local_path):
     # publish clips to configured distribution channels
@@ -30,11 +24,14 @@ def publish_clip(clip_local_path):
         'message': 'Clip published successfully.'
     }
 
-def produce_highlight_clip(input_path, highlight, clip_local_path):
+
+def produce_highlight_clip(input_path, highlight: List[Dict[str, float]], clip_local_path):
     # encode video clips using ffmpeg
     # CODE
+
     # return clip local path
-    print(f"Produced highlight clip: {clip_local_path}")
+    print(f"Produced highlight clip: {clip_local_path} and found {len(highlight)} highlights")
+
 
 def process_video(input_path, working_dir):
     # very input video file and working directory
@@ -44,7 +41,7 @@ def process_video(input_path, working_dir):
         working_dir = tempfile.gettempdir()
         assert os.path.isdir(working_dir), f"Working directory '{working_dir}' does not exist."
 
-    # loop thorugh video using a rolling window    
+    # loop thorugh video using a rolling window
     offset_start = 0.0
     window_duration_in_seconds = 60.0
     video_duration_in_seconds = get_video_duration_in_seconds(input_path)
@@ -54,9 +51,9 @@ def process_video(input_path, working_dir):
         # create a local chunk of audio (rolling windows)
         # ensure audio is encoded in 16khz mono wav format
         chunk_path = create_16khz_mono_wav_from_video(
-            input_path, 
-            offset_start, 
-            offset_start + window_duration_in_seconds, 
+            input_path,
+            offset_start,
+            offset_start + window_duration_in_seconds,
             working_dir)
 
         # transcribe audio chunk using groq API
@@ -64,7 +61,7 @@ def process_video(input_path, working_dir):
 
         # detect highlights in rolling window to identify key moments
         highlights = detect_highlights(transcript)
-        for highlight in highlights['highlights']:
+        for highlight in highlights:
             # encode video clips using ffmpeg
             clip_local_path = os.path.join(working_dir, 'clip.mp4')
             produce_highlight_clip(input_path, highlight, clip_local_path)
@@ -73,14 +70,19 @@ def process_video(input_path, working_dir):
 
         # update offset start for next rolling window
         offset_start += window_duration_in_seconds
-    
+
 
 def parse_cli_args():
     parser = argparse.ArgumentParser(description='llama-hoops', add_help=False)
-    parser.add_argument('-input', nargs='?', default="C:\\Users\\olcay\\Downloads\\lakers_mavs_20250409.mp4", help='Input video of an NBA match.')
+    # Different paths depending on OS for testing on Olcay's PC vs. Alex Mac
+    default_path = "C:\\Users\\olcay\\Downloads\\lakers_mavs_20250409.mp4" if os.name == 'nt' else "lakers_mavs_20250409.mp4"
+    parser.add_argument('-input', nargs='?',
+                        default=default_path,
+                        help='Input video of an NBA match.')
     parser.add_argument('-wd', nargs='?', default=None, help='Data working directory.')
     args = parser.parse_args()
     return args
+
 
 def main():
     # parse input parameters and resolve app path
