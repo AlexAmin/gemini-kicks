@@ -1,4 +1,6 @@
-from type.basketball_event import BasketballEvent
+from models.basketball_event import BasketballEvent
+from models.basketball_event_type import BasketballEventType
+
 
 BASKETBALL_EVENTS_SCHEMA = {
     "type": "json_schema",
@@ -13,7 +15,7 @@ BASKETBALL_EVENTS_SCHEMA = {
                         "properties": {
                             "type": {
                                 "type": "string",
-                                "enum": [e.value for e in BasketballEvent]
+                                "enum": [e.value for e in BasketballEventType]
                             },
                             "confidence": {
                                 "type": "number",

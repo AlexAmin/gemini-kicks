@@ -1,6 +1,6 @@
 from enum import Enum
 
-class BasketballEvent(Enum):
+class BasketballEventType(Enum):
     FREE_THROW = "Free Throw"
     FOUL = "Foul"
     STEAL = "Steal"

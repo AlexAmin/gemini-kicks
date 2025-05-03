@@ -3,6 +3,7 @@ import argparse
 import tempfile
 from typing import List, Dict
 from event_detection import detect
+from models.basketball_event import BasketballEvent
 from speech_to_text import transcribe
 from utils import get_video_duration_in_seconds, create_16khz_mono_wav_from_video
 
@@ -14,10 +15,9 @@ def publish_clip(clip_local_path):
         'message': 'Clip published successfully.'
     }
 
-def produce_highlight_clip(input_path, highlight: List[Dict[str, float]], clip_local_path):
+def produce_highlight_clip(input_path, highlight: List[BasketballEvent], clip_local_path):
     # encode video clips using ffmpeg
     # CODE
-
     # return clip local path
     print(f"Produced highlight clip: {clip_local_path} and found {len(highlight)} highlights")
 
