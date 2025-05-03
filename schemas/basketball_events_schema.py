@@ -18,7 +18,7 @@ BASKETBALL_EVENTS_SCHEMA = {
                                 "description": "The input phrase that made you decide that there was an event. Minimum 5 words."
                             }
                         },
-                        "required": ["type", "timestamp"]
+                        "required": ["type", "confidence", "timestamp"]
                     }},
             },
             "required": ["trainOfThought", "events"],
