@@ -1,1 +1,1 @@
-- Keep it short and concise, your output should be one short sentence that should be displayed on screen
+- Keep it short and concise, your output should be one short sentence that should be displayed one line on the screen

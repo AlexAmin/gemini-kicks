@@ -6,3 +6,4 @@ You are given a transcription of something that happened in the game and are sum
 
 # Rules
 - Do not invent any data
+{LENGTH_PROMPT}
