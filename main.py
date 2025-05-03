@@ -2,6 +2,7 @@ import os
 import argparse
 import tempfile
 from typing import List
+from os.path import join as path_join
 from event_detection import detect
 from speech_to_text import transcribe
 from models.basketball_event import BasketballEvent
@@ -30,8 +31,10 @@ def process_video(input_path: str, working_dir: str):
     assert input_path is not None, "Input video file is required."
     assert os.path.isfile(input_path), f"Input video file '{input_path}' does not exist."
     if working_dir is None:
-        working_dir = tempfile.gettempdir()
-        assert os.path.isdir(working_dir), f"Working directory '{working_dir}' does not exist."
+        working_dir = ensure_llama_hoops_dir()
+    if not os.path.exists(working_dir):
+        os.makedirs(working_dir)
+    assert os.path.isdir(working_dir), f"Working directory '{working_dir}' does not exist."
 
     # loop thorugh video using a rolling window
     offset_start = 0.0
@@ -65,10 +68,18 @@ def process_video(input_path: str, working_dir: str):
         offset_start += window_duration_in_seconds
 
 
+def ensure_llama_hoops_dir():
+    llama_hoops_dir = path_join(tempfile.gettempdir(), 'llama-hoops')
+    if not os.path.exists(llama_hoops_dir):
+        os.makedirs(llama_hoops_dir)
+    print("Temp directory:", llama_hoops_dir)
+    return llama_hoops_dir
+
+
 def parse_cli_args():
     parser = argparse.ArgumentParser(description='llama-hoops', add_help=False)
     parser.add_argument('-input', nargs='?', default='lakers_mavs_20250409.mp4', help='Input video of an NBA match.')
-    parser.add_argument('-wd', nargs='?', default="c:\\users\\olcay\\downloads", help='Data working directory.')
+    parser.add_argument('-wd', nargs='?', default=ensure_llama_hoops_dir(), help='Data working directory.')
     args = parser.parse_args()
     return args
 
