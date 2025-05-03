@@ -13,7 +13,7 @@ def get_segments_array(transcription, offset_start: float = 0.0):
             transcription.segments]
 
 
-def speech_to_text(file_path: str, offset_start: float) -> List[Dict[str, any]]:
+def transcribe(file_path: str, offset_start: float) -> List[Dict[str, any]]:
     start_time = time.time()
     with open(file_path, "rb") as file:
         transcription = client.audio.transcriptions.create(

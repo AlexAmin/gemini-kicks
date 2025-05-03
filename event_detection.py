@@ -9,7 +9,7 @@ from util.load_prompt_file import load_prompt_file
 
 client = LlamaAPIClient(api_key=os.environ.get("LLAMA_API_KEY"))
 
-def event_detection(transcription: List[Dict[str, any]]) -> List[Dict[str, float]]:
+def detect(transcription: List[Dict[str, any]]) -> List[Dict[str, float]]:
     completion = client.chat.completions.create(
         model="Llama-4-Maverick-17B-128E-Instruct-FP8",
         response_format=BASKETBALL_EVENTS_SCHEMA,
@@ -109,5 +109,5 @@ demo = [
 ]
 
 if __name__ == "__main__":
-    result = event_detection(demo)
+    result = detect(demo)
     print(result)
