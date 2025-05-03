@@ -1,6 +1,11 @@
 import os
 import subprocess
 
+def load_prompt_file(path: str) -> str:
+    with open(path, 'r') as f:
+        return f.read()
+
+
 def get_video_duration_in_seconds(path):
     command = [
         'ffprobe',

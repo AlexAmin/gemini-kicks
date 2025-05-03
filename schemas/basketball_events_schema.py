@@ -1,7 +1,6 @@
 from models.basketball_event import BasketballEvent
 from models.basketball_event_type import BasketballEventType
 
-
 BASKETBALL_EVENTS_SCHEMA = {
     "type": "json_schema",
     "json_schema": {

@@ -1,10 +1,10 @@
 import os
 import argparse
 import tempfile
-from typing import List, Dict
+from typing import List
 from event_detection import detect
-from models.basketball_event import BasketballEvent
 from speech_to_text import transcribe
+from models.basketball_event import BasketballEvent
 from utils import get_video_duration_in_seconds, create_16khz_mono_wav_from_video, clip_segment
 
 def publish_clip(clip_local_path):
@@ -53,9 +53,11 @@ def process_video(input_path: str, working_dir: str):
 
         # detect highlights in rolling window to identify key moments
         highlights = detect(transcript, offset_start)
+
         # encode video clips using ffmpeg
         clip_local_path = os.path.join(working_dir, 'clip.mp4')
         produce_highlight_clip(input_path, highlights, clip_local_path)
+        
         # public clips to configured distribution channels
         publish_clip(clip_local_path)
 
@@ -66,7 +68,7 @@ def process_video(input_path: str, working_dir: str):
 def parse_cli_args():
     parser = argparse.ArgumentParser(description='llama-hoops', add_help=False)
     parser.add_argument('-input', nargs='?', default='lakers_mavs_20250409.mp4', help='Input video of an NBA match.')
-    parser.add_argument('-wd', nargs='?', default=None, help='Data working directory.')
+    parser.add_argument('-wd', nargs='?', default="c:\\users\\olcay\\downloads", help='Data working directory.')
     args = parser.parse_args()
     return args
 
