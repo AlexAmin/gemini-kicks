@@ -9,7 +9,7 @@ from schemas.basketball_events_schema import BASKETBALL_EVENTS_SCHEMA
 
 client = LlamaAPIClient(api_key=os.environ.get("LLAMA_API_KEY"))
 
-def detect(transcription: List[Dict[str, any]]) -> List[Dict[str, float]]:
+def detect(transcription: List[Dict[str, any]], offset: float) -> List[Dict[str, float]]:
     completion = client.chat.completions.create(
         model="Llama-4-Maverick-17B-128E-Instruct-FP8",
         response_format=BASKETBALL_EVENTS_SCHEMA,
@@ -109,5 +109,5 @@ demo = [
 ]
 
 if __name__ == "__main__":
-    result = detect(demo)
+    result = detect(demo, 0.0)
     print(result)
