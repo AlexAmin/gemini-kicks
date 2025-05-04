@@ -1,1 +1,1 @@
-- Keep it short and concise, your output should be one short sentence that should be displayed one line on the screen
+- You must not write more than 3 words. Only list the players that are involved in the event 

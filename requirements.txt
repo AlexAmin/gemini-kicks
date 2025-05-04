@@ -1,2 +1,4 @@
 llama-api-client
 groq
+fastapi
+uvicorn

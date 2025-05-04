@@ -2,15 +2,18 @@ import os
 import argparse
 import tempfile
 import time
+import json
 from typing import List
 from os.path import join as path_join
 
+from api.api import start_api
 from clip_video import clip_video
 from event_detection import detect
 from event_summary import highlight_summary
 from extract_keyframes import extract_keyframes
 from models.summary_length import SummaryLength
 from models.transcription_segment import TranscriptionSegment
+from player_recognition import player_recognition
 from speech_to_text import transcribe
 from models.basketball_event import BasketballEvent
 from team_recognition import team_recognition
@@ -24,32 +27,31 @@ from utils_video import \
     clip_segment
 import subprocess
 
+start_api()
 
 
-def produce_highlight_clip(input_path, highlights: List[BasketballEvent], intro_audio_path: str, intro_duration: float):
+def produce_highlight_clip(input_path, highlights: List[BasketballEvent], intro_audio_path: str, intro_duration: float,
+                           highlight_title: str, highlight_start: float, highlight_end: float):
     # return if no highlights are found
     if len(highlights) == 0: return
-    # encode video clips using ffmpeg
-    earlist_start = min([highlight.timestamp for highlight in highlights])
-    earlist_start = earlist_start - 15 if earlist_start - 15 > 0 else 0
-    latest_end = max([highlight.timestamp for highlight in highlights]) + 15
-    # ffmpeg command to extract the highlights
+    # encode video & extract the highlights from the clips using ffmpeg
     event_names = [highlight.type for highlight in highlights]
-    event_names = '_'.join(event_names[:3])
-    file_name = f"clip_{earlist_start}_{latest_end}_{event_names}.mp4"
-    output_dir = get_temp_path("highlights-video")
-    full_path = os.path.join(output_dir, file_name)
-    clip_segment(input_path, earlist_start, latest_end, intro_audio_path, full_path, intro_duration)
+    event_names = '-'.join(event_names[:3])
+    file_name = f"clip_{highlight_start}-{highlight_end}-{event_names}-{highlight_title}.mp4"
+    clip_output_dir = get_temp_path("clips")
+    highlight_output_dir = get_temp_path("highlights-video")
+    raw_video_highlight_path = os.path.join(highlight_output_dir, file_name)
+    clip_segment(input_path, highlight_start, highlight_end, intro_audio_path, raw_video_highlight_path, intro_duration)
 
     # overlay sponsor slate on the video
     overlay_path = "assets/sponsor_overlay.mp4"
-    compiled_file_name = f"compiled_{earlist_start}_{latest_end}_{event_names}.mp4"
-    compiled_path = os.path.join(output_dir, compiled_file_name)
-    overlay_video(full_path, overlay_path, compiled_path, 0.75, intro_duration)
-    os.remove(full_path)
+    compiled_file_name = f"video_highlight-{highlight_title}-{highlight_start}-{highlight_end}-{event_names}.mp4"
+    compiled_path = os.path.join(highlight_output_dir, compiled_file_name)
+    overlay_video(raw_video_highlight_path, overlay_path, compiled_path, 0.75, intro_duration)
+    os.remove(raw_video_highlight_path)
 
     # return clip local path
-    return full_path
+    return raw_video_highlight_path
 
 
 def process_video(input_path: str, working_dir: str):
@@ -71,21 +73,35 @@ def process_video(input_path: str, working_dir: str):
     video_duration_in_seconds = get_video_duration_in_seconds(input_path)
     assert video_duration_in_seconds > 0, f"Video duration is invalid: {video_duration_in_seconds}"
 
+    # Prepare path for status file
+    status_path = get_temp_path("status")
+    status_file = os.path.join(status_path, "status.json")
+    with open(status_file, "w") as f:
+        json.dump({"status": "intro", "teams": ", ".join(teams), "full_duration": video_duration_in_seconds}, f)
+
     # Prepare Intro based on the first window in the video
     print("Preparing Intro Audio")
-    clipped_video: str = clip_video(video_duration_in_seconds/2, (video_duration_in_seconds/2)+window_duration_in_seconds, input_path)
+    clipped_video: str = clip_video(video_duration_in_seconds / 2,
+                                    (video_duration_in_seconds / 2) + window_duration_in_seconds, input_path)
     keyframes: List[str] = extract_keyframes(clipped_video)
     teams = team_recognition(keyframes)
-    intro_audio_path = text_to_speech(f"{teams[0]} {teams[1]}!!!! Highlights with meta and groq")
+    intro_audio_path = text_to_speech(f"{teams[0]} {teams[1]}!!!! Highlights with meta and groq", "intro-audio")
     intro_duration = get_video_duration_in_seconds(intro_audio_path)
     print(f"Intro Audio Generated for {teams} @ {intro_audio_path}")
     all_transcripts: List[TranscriptionSegment] = []
+    all_players = []
 
     while offset_start < video_duration_in_seconds - window_duration_in_seconds:
         # create a local chunk of audio (rolling windows)
         # ensure audio is encoded in 16khz mono wav format
         window_start = offset_start
         window_end = offset_start + window_duration_in_seconds
+
+        # Write status for use in frontend
+        with open(status_file, "w") as f:
+            json.dump({"status": "generating", "window_start": window_start, "window_end": window_end, "teams": ", ".join(teams), "full_duration": video_duration_in_seconds}, f)
+
+        # Begin Analysis
         print(f"> Analyze {window_start} - {window_end}")
         chunk_path = create_16khz_mono_wav_from_video(
             input_path,
@@ -109,12 +125,21 @@ def process_video(input_path: str, working_dir: str):
         if len(highlights) == 0: continue
 
         # Find the text segments relevant to these highlights
-        highlight_transcripts: List[TranscriptionSegment] = get_transcripts_for_highlights(transcript, highlights)
-
+        highlight_data: tuple[tuple[float, float], List[TranscriptionSegment]] = get_transcripts_for_highlights(
+            transcript, highlights)
+        highlights_start_timestamp = highlight_data[0][0]
+        highlights_end_timestamp = highlight_data[0][1]
+        highlight_transcripts = highlight_data[1]
+        print(f"highlights {highlight_data}")
         # Remember the highlights for the full summary later
         all_transcripts.extend(highlight_transcripts)
 
         # Generate a clean summary for tts
+        players = player_recognition(highlight_transcripts)
+        player_string = "_".join(players)
+        if len(player_string) == 0:
+            player_string = "?"
+        all_players.extend(players)
         summary = highlight_summary(highlight_transcripts, SummaryLength.MEDIUM)
         print("Generated highlight summary")
 
@@ -123,24 +148,32 @@ def process_video(input_path: str, working_dir: str):
         print(f"Created TTS for summary at {summary_tts_path}")
 
         # encode video clips using ffmpeg
-        video_clip_path = produce_highlight_clip(input_path, highlights, intro_audio_path, intro_duration)
+        video_clip_path = produce_highlight_clip(input_path, highlights, intro_audio_path, intro_duration,
+                                                 player_string, highlights_start_timestamp, highlights_end_timestamp)
         print(f"Produced video highlight clip: {video_clip_path}")
-        audio_clip_path = produce_audio_highlight(intro_audio_path, summary_tts_path)
+        audio_clip_path = produce_audio_highlight(intro_audio_path, summary_tts_path, player_string,
+                                                  highlights_start_timestamp, highlights_end_timestamp)
         print(f"Produced audio highlight clip: {audio_clip_path}")
 
+    with open(status_file, "w") as f:
+        json.dump({"status": "audio-summary", "teams": ", ".join(teams), "full_duration": video_duration_in_seconds}, f)
     # Generate a full summary for the whole match
     print("Generating audio summary for the whole match.. ")
     full_summary: str = highlight_summary(all_transcripts, SummaryLength.XXL)
     # Create TTS for it
-    full_summary_tts_path: str = text_to_speech(full_summary, "full-summary")
+    full_summary_tts_path: str = text_to_speech(full_summary, "_".join(all_players), "full-summary")
     print(f"Full summary generated at {full_summary_tts_path}")
+    with open(status_file, "w") as f:
+        json.dump({"status": "done", "teams": ", ".join(teams), "full_duration": video_duration_in_seconds}, f)
 
 
-def produce_audio_highlight(intro_audio_path: str, summary_audio_path: str) -> str:
+def produce_audio_highlight(intro_audio_path: str, summary_audio_path: str, highlight_title: str,
+                            highlight_start: float, highlight_end: float) -> str:
     # Generate TTS for summary
     # ffmpeg command to combine background radio with intro and summary audio
     timestamp = str(int(time.time()))
-    output_path = os.path.join(get_temp_path("highlights-audio"), f"audio-highlight-{timestamp}.mp3")
+    output_path = os.path.join(get_temp_path("highlights-audio"),
+                               f"audio_highlight-{highlight_title}-{highlight_start}-{highlight_end}.mp3")
 
     cmd = [
         "ffmpeg",
