@@ -1,1 +1,1 @@
-- Keep it short and concise, your output should be one short sentence that should be spoken as a 30 second voice over
+- Your output should be concise but long enough that it can be used for a 30-second voice over

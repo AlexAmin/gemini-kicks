@@ -1,1 +1,1 @@
-- Keep it short and concise, your output should be one short sentence that should be used as an instagram caption
+- Create a 30 second voice over for an instagram story video voice over 
