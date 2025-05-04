@@ -3,12 +3,16 @@ import argparse
 import tempfile
 from typing import List
 from os.path import join as path_join
+
+from clip_video import clip_video
 from event_detection import detect
 from event_summary import highlight_summary
+from extract_keyframes import extract_keyframes
 from models.summary_length import SummaryLength
 from models.transcription_segment import TranscriptionSegment
 from speech_to_text import transcribe
 from models.basketball_event import BasketballEvent
+from team_recognition import team_recognition
 from text_to_speech import text_to_speech
 from utils_llm import get_transcripts_for_highlights
 from utils_video import \
@@ -25,6 +29,7 @@ def publish_clip(clip_local_path):
         'status': 'success',
         'message': 'Clip published successfully.'
     }
+
 
 def produce_highlight_clip(input_path, highlights: List[BasketballEvent], tts_file_path: str, working_dir: str):
     # return if no highlights are found
@@ -62,6 +67,8 @@ def process_video(input_path: str, working_dir: str):
         os.makedirs(working_dir)
     assert os.path.isdir(working_dir), f"Working directory '{working_dir}' does not exist."
 
+    teams: List[str] = []
+    intro_audio_path: str | None = None
     # loop thorugh video using a rolling window
     offset_start = 0.0
     window_duration_in_seconds = 60.0
@@ -71,11 +78,20 @@ def process_video(input_path: str, working_dir: str):
     while offset_start < video_duration_in_seconds - window_duration_in_seconds:
         # create a local chunk of audio (rolling windows)
         # ensure audio is encoded in 16khz mono wav format
+        window_start = offset_start
+        window_end = offset_start + window_duration_in_seconds
         chunk_path = create_16khz_mono_wav_from_video(
             input_path,
-            offset_start,
-            offset_start + window_duration_in_seconds,
+            window_start,
+            window_end,
             working_dir)
+
+        if intro_audio_path is None:
+            clipped_video: str = clip_video(window_start, window_end, input_path)
+            keyframes: List[str] = extract_keyframes(clipped_video)
+            teams = team_recognition(keyframes)
+            intro_audio_path = text_to_speech(f"{teams[0]} vs {teams[1]}. Highlights by Meta & Groq")
+            print(f"Intro Audio: {intro_audio_path}")
 
         # transcribe audio chunk using groq API
         transcript: List[TranscriptionSegment] = transcribe(chunk_path)
@@ -101,7 +117,7 @@ def process_video(input_path: str, working_dir: str):
 
         # encode video clips using ffmpeg
         clip_path = produce_highlight_clip(input_path, highlights, tts_path, working_dir)
-        
+
         # public clips to configured distribution channels
         publish_clip(clip_path)
 
