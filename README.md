@@ -17,7 +17,7 @@ LlamaCon Hackathon 2025 Project using Llama API and Groq Inferencing to extract 
 - Timeouts
 - Substitutions
 
-## demo video
+## 🚀 demo video
 https://youtu.be/LMqbwFwGxaI
 
 ## 📄 inputs
