@@ -132,7 +132,6 @@ def process_video(input_path: str, working_dir: str):
         highlights_start_timestamp = highlight_data[0][0]
         highlights_end_timestamp = highlight_data[0][1]
         highlight_transcripts = highlight_data[1]
-        print(f"highlights {highlight_data}")
         # Remember the highlights for the full summary later
         all_transcripts.extend(highlight_transcripts)
 
