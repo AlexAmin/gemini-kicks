@@ -31,7 +31,7 @@ def publish_clip(clip_local_path):
     }
 
 
-def produce_highlight_clip(input_path, highlights: List[BasketballEvent], tts_file_path: str, working_dir: str):
+def produce_highlight_clip(input_path, highlights: List[BasketballEvent], intro_audio_path: str, working_dir: str):
     # return if no highlights are found
     if len(highlights) == 0: return
     # encode video clips using ffmpeg
@@ -43,13 +43,13 @@ def produce_highlight_clip(input_path, highlights: List[BasketballEvent], tts_fi
     event_names = '_'.join(event_names)
     file_name = f"clip_{earlist_start}_{latest_end}_{event_names}.mp4"
     full_path = os.path.join(working_dir, file_name)
-    clip_segment(input_path, earlist_start, latest_end, tts_file_path, full_path)
+    clip_segment(input_path, earlist_start, latest_end, intro_audio_path, full_path)
 
     # overlay sponsor slate on the video
-    overlay_path = "assets/sponsor_overlay.mp4"
-    compiled_file_name = f"compiled_{earlist_start}_{latest_end}_{event_names}.mp4"
-    compiled_path = os.path.join(working_dir, compiled_file_name)
-    overlay_video(full_path, overlay_path, compiled_path)
+    # overlay_path = "assets/sponsor_overlay.mp4"
+    # compiled_file_name = f"compiled_{earlist_start}_{latest_end}_{event_names}.mp4"
+    # compiled_path = os.path.join(working_dir, compiled_file_name)
+    # overlay_video(full_path, overlay_path, compiled_path)
 
     # return clip local path
     print(f"Produced highlight clip: {full_path} and found {len(highlights)} highlights")
@@ -108,13 +108,13 @@ def process_video(input_path: str, working_dir: str):
         highlight_transcripts: List[TranscriptionSegment] = get_transcripts_for_highlights(transcript, highlights)
 
         # Generate a clean summary for tts
-        summary = highlight_summary(highlight_transcripts, SummaryLength.MEDIUM)
+        # summary = highlight_summary(highlight_transcripts, SummaryLength.MEDIUM)
 
         # Generate TTS
-        tts_path = text_to_speech(summary)
+        # tts_path = text_to_speech(summary)
 
         # encode video clips using ffmpeg
-        clip_path = produce_highlight_clip(input_path, highlights, tts_path, working_dir)
+        clip_path = produce_highlight_clip(input_path, highlights, intro_audio_path, working_dir)
 
         # public clips to configured distribution channels
         publish_clip(clip_path)

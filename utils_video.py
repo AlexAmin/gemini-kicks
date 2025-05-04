@@ -47,18 +47,22 @@ def create_16khz_mono_wav_from_video(path, start_time, end_time, working_dir):
     return output_path
 
 
-def clip_segment(input_path, start_time, end_time, audio_path: str, output_path):
-    if not os.path.exists(audio_path):
-        raise FileNotFoundError(f"Audio file not found: {audio_path}")
+def clip_segment(input_path, start_time, end_time, intro_audio_path: str, output_path):
+    if not os.path.exists(intro_audio_path):
+        raise FileNotFoundError(f"Audio file not found: {intro_audio_path}")
 
     cmd = [
         "ffmpeg",
         "-ss", str(start_time),
         "-to", str(end_time),
         "-i", input_path,
-        "-i", audio_path,
+        "-i", intro_audio_path,
+        "-filter_complex",
+        "[0:a]volume=enable='gte(t,{duration_intro})'[delayed];[1:a][delayed]concat=n=2:v=0:a=1[aout]".format(
+            duration_intro=get_video_duration_in_seconds(intro_audio_path)
+        ),
         "-map", "0:v",  # take video from first input
-        "-map", "1:a",  # take audio from second input
+        "-map", "[aout]",  # use combined audio
         "-c:v", "copy",  # copy video codec
         "-y",  # overwrite output file
         output_path
@@ -66,6 +70,7 @@ def clip_segment(input_path, start_time, end_time, audio_path: str, output_path)
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
         raise RuntimeError(f"FFmpeg error: {result.stderr}")
+
 
 
 def overlay_video(input_path, overlay_path, output_path, overlay_scale=0.5):
