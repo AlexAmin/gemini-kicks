@@ -8,8 +8,12 @@ from models.transcription_segment import TranscriptionSegment
 from speech_to_text import transcribe
 from models.basketball_event import BasketballEvent
 from text_to_speech import text_to_speech
-from utils import get_video_duration_in_seconds, create_16khz_mono_wav_from_video, clip_segment, \
-    get_transcripts_for_highlights
+from utils import \
+    get_video_duration_in_seconds, \
+    create_16khz_mono_wav_from_video, \
+    get_transcripts_for_highlights, \
+    overlay_video, \
+    clip_segment
 
 
 def publish_clip(clip_local_path):
@@ -33,6 +37,13 @@ def produce_highlight_clip(input_path, highlights: List[BasketballEvent], workin
     file_name = f"clip_{earlist_start}_{latest_end}_{event_names}.mp4"
     full_path = os.path.join(working_dir, file_name)
     clip_segment(input_path, earlist_start, latest_end, full_path)
+
+    # overlay sponsor slate on the video
+    overlay_path = "assets/sponsor_overlay.mp4"
+    compiled_file_name = f"compiled_{earlist_start}_{latest_end}_{event_names}.mp4"
+    compiled_path = os.path.join(working_dir, compiled_file_name)
+    overlay_video(full_path, overlay_path, compiled_path)
+    
     # return clip local path
     print(f"Produced highlight clip: {full_path} and found {len(highlights)} highlights")
     return full_path
