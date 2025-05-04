@@ -4,9 +4,9 @@
 LlamaCon Hackathon 2025 Project using Llama API and Groq Inferencing to extract Basketball Highlights and compose sports clips in real-time as well as a full game summary.
 
 where LLama API and Groq are used:
-- event_detection.py (Llama API - Multi-Image Understanding, Chat Completion with Structured Output & Train-of-Thought)
-- speech_to_text.py (Groq - Transcription through Speech-to-Text)
-- text_to_speech.py (Groq - Voice over creation through Text-to-Speech)
+- **event_detection.py** (Llama API - Multi-Image Understanding, Chat Completion with Structured Output & Train-of-Thought)
+- **speech_to_text.py** (Groq - Transcription through Speech-to-Text)
+- **text_to_speech.py** (Groq - Voice over creation through Text-to-Speech)
 
 ## type of events
 - Free Throws
