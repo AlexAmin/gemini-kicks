@@ -44,7 +44,8 @@ def produce_highlight_clip(input_path, highlights: List[BasketballEvent], tts_fi
     overlay_path = "assets/sponsor_overlay.mp4"
     compiled_file_name = f"compiled_{earlist_start}_{latest_end}_{event_names}.mp4"
     compiled_path = os.path.join(working_dir, compiled_file_name)
-    overlay_video(full_path, overlay_path, compiled_path)
+    overlay_video(full_path, overlay_path, compiled_path, 0.75)
+    os.remove(full_path)
     
     # return clip local path
     print(f"Produced highlight clip: {full_path} and found {len(highlights)} highlights")
@@ -78,6 +79,7 @@ def process_video(input_path: str, working_dir: str):
 
         # transcribe audio chunk using groq API
         transcript: List[TranscriptionSegment] = transcribe(chunk_path)
+        os.remove(chunk_path)
 
         # detect highlights in rolling window to identify key moments
         highlights: List[BasketballEvent] = detect(transcript, offset_start)

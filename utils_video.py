@@ -26,6 +26,7 @@ def create_16khz_mono_wav_from_video(path, start_time, end_time, working_dir):
     output_path = os.path.join(working_dir, 'chunk.wav')
     command = [
         'ffmpeg',
+        '-loglevel', 'error',
         '-ss', str(start_time),
         '-to', str(end_time),
         '-i', path,
@@ -53,12 +54,13 @@ def clip_segment(input_path, start_time, end_time, audio_path: str, output_path)
 
     cmd = [
         "ffmpeg",
+        "-loglevel", "error",
         "-ss", str(start_time),
         "-to", str(end_time),
         "-i", input_path,
-        "-i", audio_path,
-        "-map", "0:v",  # take video from first input
-        "-map", "1:a",  # take audio from second input
+        # "-i", audio_path,
+        # "-map", "0:v",  # take video from first input
+        # "-map", "1:a",  # take audio from second input
         "-c:v", "copy",  # copy video codec
         "-y",  # overwrite output file
         output_path
@@ -68,13 +70,15 @@ def clip_segment(input_path, start_time, end_time, audio_path: str, output_path)
         raise RuntimeError(f"FFmpeg error: {result.stderr}")
 
 
-def overlay_video(input_path, overlay_path, output_path, overlay_scale=0.5):
+def overlay_video(input_path, overlay_path, output_path, overlay_scale=1.0):
     ffmpeg_command = [
         "ffmpeg",
+        "-loglevel", "error",
         "-i", input_path,
         "-i", overlay_path,
         "-filter_complex",
-        "[1:v]scale=iw*"+str(overlay_scale)+":ih*"+str(overlay_scale)+"[scaled];[0:v][scaled]overlay=0:0:shortest=1",
+        "[1:v]scale=iw*"+str(overlay_scale)+":ih*"+str(overlay_scale)+"[scaled];"
+        "[0:v][scaled]overlay=x=(main_w-overlay_w)/2:y=(main_h-overlay_h)/2:enable='lte(t,3.5)'",
         "-c:a", "copy",
         output_path
     ]
