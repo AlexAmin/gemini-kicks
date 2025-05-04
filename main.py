@@ -76,7 +76,7 @@ def process_video(input_path: str, working_dir: str):
     clipped_video: str = clip_video(0, window_duration_in_seconds, input_path)
     keyframes: List[str] = extract_keyframes(clipped_video)
     teams = team_recognition(keyframes)
-    intro_audio_path = text_to_speech(f"{teams[0].upper()}!! versus {teams[1].upper()}!! Highlights by meta and groq")
+    intro_audio_path = text_to_speech(f"{teams[0]}!! versus {teams[1]}!! Highlights! by meta and groq")
     intro_duration = get_video_duration_in_seconds(intro_audio_path)
     print(f"Intro Audio Generated for {teams} @ {intro_audio_path}")
     all_transcripts: List[TranscriptionSegment] = []
@@ -126,7 +126,7 @@ def process_video(input_path: str, working_dir: str):
         video_clip_path = produce_highlight_clip(input_path, highlights, intro_audio_path, intro_duration)
         print(f"Produced video highlight clip: {video_clip_path}")
         audio_clip_path = produce_audio_highlight(intro_audio_path, summary_tts_path)
-        print(f"Generated audio highlight clip {audio_clip_path}")
+        print(f"Produced audio highlight clip: {audio_clip_path}")
 
     # Generate a full summary for the whole match
     print("Generating audio summary for the whole match.. ")
@@ -151,7 +151,6 @@ def produce_audio_highlight(intro_audio_path: str, summary_audio_path: str) -> s
     ]
 
     subprocess.run(cmd, check=True, capture_output=True)
-    print(f"Audio highlight: {output_path}")
     return output_path
 
 
