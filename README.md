@@ -27,7 +27,7 @@ LlamaCon Hackathon 2025 Project using Llama API and Groq Inferencing to extract 
 - Preview of a foul highlight clip with sponsor overlay<br>
   ![foul highlight clip](assets/preview_foul_highlight.gif)
 
-## ⚽🏈🎾 Supporting other sports
+## ⚽🏈🎾 supporting other sports
 - Adding support for other sports like football, soccer, tennis, is straight forward.
   - You need to identify the type of events that are relevant.
     - example for soccer: goals, corner kicks, red and yellow cards.
