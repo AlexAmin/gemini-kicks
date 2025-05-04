@@ -3,6 +3,7 @@
 # llama-hoops
 LlamaCon Hackathon 2025 Project using Llama API and Groq Inferencing to extract Basketball Highlights and compose sports clips in real-time as well as a full game summaries.
 
+
 🦙 where LLama API and Groq are used:
 - **event_detection.py** (Llama API - Multi-Image Understanding, Chat Completion with Structured Output & Train-of-Thought)
 - **speech_to_text.py** (Groq - Transcription through Speech-to-Text)
@@ -15,6 +16,9 @@ LlamaCon Hackathon 2025 Project using Llama API and Groq Inferencing to extract 
 - Turnovers
 - Timeouts
 - Substitutions
+
+## demo video
+https://youtu.be/LMqbwFwGxaI
 
 ## 📄 inputs
 - Video of an entire basketball match
