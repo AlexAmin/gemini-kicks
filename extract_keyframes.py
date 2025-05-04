@@ -1,13 +1,11 @@
 import os
 import subprocess
 import time
-import tempfile
 from glob import glob
 from typing import List
-
-from team_recognition import team_recognition
+from utils_av import chunk_list
 from util_io import get_temp_path
-from utils_video import chunk_list
+from team_recognition import team_recognition
 
 
 def extract_keyframes(input_path) -> List[str]:

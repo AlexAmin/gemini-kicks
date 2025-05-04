@@ -9,6 +9,7 @@ from os.path import join as path_join
 from api.api import start_api
 from clip_video import clip_video
 from event_detection import detect
+from os.path import join as path_join
 from event_summary import highlight_summary
 from extract_keyframes import extract_keyframes
 from models.summary_length import SummaryLength
@@ -20,9 +21,10 @@ from team_recognition import team_recognition
 from text_to_speech import text_to_speech
 from util_io import get_temp_path
 from utils_llm import get_transcripts_for_highlights
-from utils_video import \
+from utils_av import \
     get_video_duration_in_seconds, \
     create_16khz_mono_wav_from_video, \
+    produce_audio_highlight, \
     overlay_video, \
     clip_segment
 import subprocess

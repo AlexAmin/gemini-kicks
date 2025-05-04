@@ -10,7 +10,7 @@ from schemas.players_schema import PLAYERS_SCHEMA
 from schemas.teams_schema import TEAMS_SCHEMA
 from utils_images import base64_encode_image_file
 from utils_llm import load_prompt_file
-from utils_video import chunk_list
+from utils_av import chunk_list
 
 client = LlamaAPIClient(api_key=os.environ.get("LLAMA_API_KEY"))
 
