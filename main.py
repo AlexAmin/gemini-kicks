@@ -31,7 +31,7 @@ def publish_clip(clip_local_path):
     }
 
 
-def produce_highlight_clip(input_path, highlights: List[BasketballEvent], intro_audio_path: str, working_dir: str):
+def produce_highlight_clip(input_path, highlights: List[BasketballEvent], intro_audio_path: str, working_dir: str, intro_duration: float):
     # return if no highlights are found
     if len(highlights) == 0: return
     # encode video clips using ffmpeg
@@ -43,13 +43,13 @@ def produce_highlight_clip(input_path, highlights: List[BasketballEvent], intro_
     event_names = '_'.join(event_names)
     file_name = f"clip_{earlist_start}_{latest_end}_{event_names}.mp4"
     full_path = os.path.join(working_dir, file_name)
-    clip_segment(input_path, earlist_start, latest_end, intro_audio_path, full_path)
+    clip_segment(input_path, earlist_start, latest_end, intro_audio_path, full_path, intro_duration)
 
     # overlay sponsor slate on the video
     overlay_path = "assets/sponsor_overlay.mp4"
     compiled_file_name = f"compiled_{earlist_start}_{latest_end}_{event_names}.mp4"
     compiled_path = os.path.join(working_dir, compiled_file_name)
-    overlay_video(full_path, overlay_path, compiled_path, 0.75)
+    overlay_video(full_path, overlay_path, compiled_path, 0.75, intro_duration)
     os.remove(full_path)
 
     # return clip local path
@@ -69,6 +69,7 @@ def process_video(input_path: str, working_dir: str):
 
     teams: List[str] = []
     intro_audio_path: str | None = None
+    intro_duration: float = 0.0
     # loop thorugh video using a rolling window
     offset_start = 0.0
     window_duration_in_seconds = 60.0
@@ -91,6 +92,7 @@ def process_video(input_path: str, working_dir: str):
             keyframes: List[str] = extract_keyframes(clipped_video)
             teams = team_recognition(keyframes)
             intro_audio_path = text_to_speech(f"{teams[0]} vs {teams[1]}. Highlights by Meta & Groq")
+            intro_duration = get_video_duration_in_seconds(intro_audio_path)
             print(f"Intro Audio: {intro_audio_path}")
 
         # transcribe audio chunk using groq API
@@ -116,7 +118,8 @@ def process_video(input_path: str, working_dir: str):
         # tts_path = text_to_speech(summary)
 
         # encode video clips using ffmpeg
-        clip_path = produce_highlight_clip(input_path, highlights, intro_audio_path, working_dir)
+
+        clip_path = produce_highlight_clip(input_path, highlights, intro_audio_path, working_dir, intro_duration)
 
         # public clips to configured distribution channels
         publish_clip(clip_path)
