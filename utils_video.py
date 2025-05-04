@@ -79,6 +79,12 @@ def overlay_video(input_path, overlay_path, output_path, overlay_scale=0.5):
         output_path
     ]
     try:
-        subprocess.run(ffmpeg_command, check=True)
+        subprocess.run(ffmpeg_command, check=True, capture_output=True)
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"FFmpeg error: {e.stderr}") from e
+
+
+def chunk_list(lst, n):
+    """Split a list into chunks of size n"""
+    return [lst[i:i + n] for i in range(0, len(lst), n)]
+

@@ -3,11 +3,13 @@ import subprocess
 import time
 import tempfile
 from glob import glob
+from typing import List
 
 from team_recognition import team_recognition
+from utils_video import chunk_list
 
 
-def extract_keyframes(input_path):
+def extract_keyframes(input_path) -> List[str]:
     if not os.path.exists(input_path):
         raise FileNotFoundError(f"Input file does not exist: {input_path}")
 
@@ -31,19 +33,14 @@ def extract_keyframes(input_path):
     if result.returncode != 0:
         raise RuntimeError(f"FFmpeg failed with error: {result.stderr}")
 
-    return timestamp_dir
+    keyframe_files = sorted(glob(os.path.join(timestamp_dir, "*.jpg")))
+    return keyframe_files
 
 
-def chunk_list(lst, n):
-    """Split a list into chunks of size n"""
-    return [lst[i:i + n] for i in range(0, len(lst), n)]
 
 
 if __name__ == "__main__":
-    output_dir = extract_keyframes("lakers-short.mp4")
-
-    # Find all keyframe files
-    keyframe_files = sorted(glob(os.path.join(output_dir, "*.jpg")))
+    keyframe_files = extract_keyframes("lakers-short.mp4")
 
     # Split into chunks of 8
     file_chunks = chunk_list(keyframe_files, 8)
@@ -52,4 +49,4 @@ if __name__ == "__main__":
     for chunk in file_chunks:
         print(team_recognition(chunk))
 
-    print(output_dir)
+
