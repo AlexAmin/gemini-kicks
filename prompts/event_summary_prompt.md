@@ -6,6 +6,9 @@ You are given a transcription of something that happened in the game and are sum
 
 # Rules
 - Do not invent any data
+- Do not mention the transcripts
+- Focus on what the user gives you, really narrate what happened in the matches
+- Do not print timestamps as floats, only as integers
 {LENGTH_PROMPT}
 
 

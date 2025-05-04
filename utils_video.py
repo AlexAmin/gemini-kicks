@@ -48,9 +48,9 @@ def create_16khz_mono_wav_from_video(path, start_time, end_time, working_dir):
     return output_path
 
 
-def clip_segment(input_path, start_time, end_time, audio_path: str, output_path):
-    if not os.path.exists(audio_path):
-        raise FileNotFoundError(f"Audio file not found: {audio_path}")
+def clip_segment(input_path, start_time, end_time, intro_audio_path: str, output_path, intro_duration):
+    if not os.path.exists(intro_audio_path):
+        raise FileNotFoundError(f"Audio file not found: {intro_audio_path}")
 
     cmd = [
         "ffmpeg",
@@ -58,9 +58,13 @@ def clip_segment(input_path, start_time, end_time, audio_path: str, output_path)
         "-ss", str(start_time),
         "-to", str(end_time),
         "-i", input_path,
-        # "-i", audio_path,
-        # "-map", "0:v",  # take video from first input
-        # "-map", "1:a",  # take audio from second input
+        "-i", intro_audio_path,
+        "-filter_complex",
+        "[0:a]volume=enable='gte(t,{duration_intro})'[delayed];[1:a][delayed]concat=n=2:v=0:a=1[aout]".format(
+            duration_intro=intro_duration
+        ),
+        "-map", "0:v",  # take video from first input
+        "-map", "[aout]",  # use combined audio
         "-c:v", "copy",  # copy video codec
         "-y",  # overwrite output file
         output_path
@@ -70,7 +74,7 @@ def clip_segment(input_path, start_time, end_time, audio_path: str, output_path)
         raise RuntimeError(f"FFmpeg error: {result.stderr}")
 
 
-def overlay_video(input_path, overlay_path, output_path, overlay_scale=1.0):
+def overlay_video(input_path, overlay_path, output_path, overlay_scale=1.0, intro_duration=1.0):
     ffmpeg_command = [
         "ffmpeg",
         "-loglevel", "error",
@@ -78,12 +82,13 @@ def overlay_video(input_path, overlay_path, output_path, overlay_scale=1.0):
         "-i", overlay_path,
         "-filter_complex",
         "[1:v]scale=iw*"+str(overlay_scale)+":ih*"+str(overlay_scale)+"[scaled];"
-        "[0:v][scaled]overlay=x=(main_w-overlay_w)/2:y=(main_h-overlay_h)/2:enable='lte(t,3.5)'",
+        "[0:v][scaled]overlay=x=(main_w-overlay_w)/2:y=(main_h-overlay_h)/2:enable='lte(t," + str(intro_duration) + ")'",
         "-c:a", "copy",
+        "-y",
         output_path
     ]
     try:
-        subprocess.run(ffmpeg_command, check=True, capture_output=True)
+        subprocess.run(ffmpeg_command)
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"FFmpeg error: {e.stderr}") from e
 
