@@ -10,7 +10,7 @@ from schemas.basketball_events_schema import BASKETBALL_EVENTS_SCHEMA
 
 client = LlamaAPIClient(api_key=os.environ.get("LLAMA_API_KEY"))
 
-def detect(transcription: List[TranscriptionSegment], offset: float) -> DetectionResult:
+def detect(transcription: List[TranscriptionSegment], offset: float) -> List[BasketballEvent]:
     transcription_json = json.dumps([item.to_dict() for item in transcription])
     prompt = load_prompt_file("prompts/basketball_event_detection_prompt.md")
     completion = client.chat.completions.create(
@@ -30,13 +30,18 @@ def detect(transcription: List[TranscriptionSegment], offset: float) -> Detectio
     )
     output = json.loads(completion.completion_message.content.text)
     result = DetectionResult(**output)
-    # fix offset for each event
+    
+    # Fix events is null
     if result.events is None:
         result.events = []
-    for event in result.events:
-        event['timestamp'] += offset
 
-    return result
+    # Convert dictionary events to BasketballEvent instances
+    result.events = [BasketballEvent(**event) for event in result.events]
+
+    # Add offset to timestamps for convenience
+    result.events = [BasketballEvent(**{**event.__dict__, "timestamp": event.timestamp + offset}) for event in result.events]
+
+    return result.events
 
 
 if __name__ == "__main__":

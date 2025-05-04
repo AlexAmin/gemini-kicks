@@ -55,13 +55,20 @@ def create_16khz_mono_wav_from_video(path, start_time, end_time, working_dir):
     return output_path
 
 
-def clip_segment(input_path, start_time, end_time, output_path):
+def clip_segment(input_path, start_time, end_time, audio_path: str, output_path):
+    if not os.path.exists(audio_path):
+        raise FileNotFoundError(f"Audio file not found: {audio_path}")
+
     cmd = [
         "ffmpeg",
         "-ss", str(start_time),
         "-to", str(end_time),
         "-i", input_path,
-        "-c", "copy",
+        "-i", audio_path,
+        "-map", "0:v",  # take video from first input
+        "-map", "1:a",  # take audio from second input
+        "-c:v", "copy",  # copy video codec
+        "-y",  # overwrite output file
         output_path
     ]
     result = subprocess.run(cmd, capture_output=True, text=True)
@@ -71,13 +78,13 @@ def clip_segment(input_path, start_time, end_time, output_path):
 
 def overlay_video(input_path, overlay_path, output_path, overlay_scale=0.5):
     ffmpeg_command = [
-    "ffmpeg",
-    "-i", input_path,
-    "-i", overlay_path,
-    "-filter_complex",
-    "[1:v]scale=iw*"+str(overlay_scale)+":ih*"+str(overlay_scale)+"[scaled];[0:v][scaled]overlay=0:0:shortest=1",
-    "-c:a", "copy",
-    output_path
+        "ffmpeg",
+        "-i", input_path,
+        "-i", overlay_path,
+        "-filter_complex",
+        "[1:v]scale=iw*"+str(overlay_scale)+":ih*"+str(overlay_scale)+"[scaled];[0:v][scaled]overlay=0:0:shortest=1",
+        "-c:a", "copy",
+        output_path
     ]
     try:
         subprocess.run(ffmpeg_command, check=True)
