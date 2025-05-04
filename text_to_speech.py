@@ -3,12 +3,15 @@ import time
 import tempfile
 from groq import Groq
 
+from util_io import get_temp_path
+
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
-def text_to_speech(text: str):
+def text_to_speech(text: str, output_dir="tts"):
     # Voices: https://console.groq.com/docs/text-to-speech
     timestamp = str(int(time.time()))
-    speech_file_path = os.path.join(tempfile.gettempdir(), f"{timestamp}.wav")
+    speech_file_path = os.path.join(get_temp_path(output_dir), f"{timestamp}.wav")
+
     model = "playai-tts"
     voice = "Mikail-PlayAI"
     text = text

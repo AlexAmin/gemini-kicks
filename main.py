@@ -1,6 +1,7 @@
 import os
 import argparse
 import tempfile
+import time
 from typing import List
 from os.path import join as path_join
 
@@ -14,24 +15,18 @@ from speech_to_text import transcribe
 from models.basketball_event import BasketballEvent
 from team_recognition import team_recognition
 from text_to_speech import text_to_speech
+from util_io import get_temp_path
 from utils_llm import get_transcripts_for_highlights
 from utils_video import \
     get_video_duration_in_seconds, \
     create_16khz_mono_wav_from_video, \
     overlay_video, \
     clip_segment
+import subprocess
 
 
-def publish_clip(clip_local_path):
-    # publish clips to configured distribution channels
-    # CODE
-    return {
-        'status': 'success',
-        'message': 'Clip published successfully.'
-    }
 
-
-def produce_highlight_clip(input_path, highlights: List[BasketballEvent], intro_audio_path: str, working_dir: str, intro_duration: float):
+def produce_highlight_clip(input_path, highlights: List[BasketballEvent], intro_audio_path: str, intro_duration: float):
     # return if no highlights are found
     if len(highlights) == 0: return
     # encode video clips using ffmpeg
@@ -42,18 +37,18 @@ def produce_highlight_clip(input_path, highlights: List[BasketballEvent], intro_
     event_names = [highlight.type for highlight in highlights]
     event_names = '_'.join(event_names)
     file_name = f"clip_{earlist_start}_{latest_end}_{event_names}.mp4"
-    full_path = os.path.join(working_dir, file_name)
+    output_dir = get_temp_path("highlights-video")
+    full_path = os.path.join(output_dir, file_name)
     clip_segment(input_path, earlist_start, latest_end, intro_audio_path, full_path, intro_duration)
 
     # overlay sponsor slate on the video
     overlay_path = "assets/sponsor_overlay.mp4"
     compiled_file_name = f"compiled_{earlist_start}_{latest_end}_{event_names}.mp4"
-    compiled_path = os.path.join(working_dir, compiled_file_name)
+    compiled_path = os.path.join(output_dir, compiled_file_name)
     overlay_video(full_path, overlay_path, compiled_path, 0.75, intro_duration)
     os.remove(full_path)
 
     # return clip local path
-    print(f"Produced highlight clip: {full_path} and found {len(highlights)} highlights")
     return full_path
 
 
@@ -76,53 +71,88 @@ def process_video(input_path: str, working_dir: str):
     video_duration_in_seconds = get_video_duration_in_seconds(input_path)
     assert video_duration_in_seconds > 0, f"Video duration is invalid: {video_duration_in_seconds}"
 
+    # Prepare Intro based on the first window in the video
+    print("Preparing Intro Audio")
+    clipped_video: str = clip_video(0, window_duration_in_seconds, input_path)
+    keyframes: List[str] = extract_keyframes(clipped_video)
+    teams = team_recognition(keyframes)
+    intro_audio_path = text_to_speech(f"{teams[0].upper()}!! versus {teams[1].upper()}!! Highlights by meta and groq")
+    intro_duration = get_video_duration_in_seconds(intro_audio_path)
+    print(f"Intro Audio Generated for {teams} @ {intro_audio_path}")
+    all_transcripts: List[TranscriptionSegment] = []
+
     while offset_start < video_duration_in_seconds - window_duration_in_seconds:
         # create a local chunk of audio (rolling windows)
         # ensure audio is encoded in 16khz mono wav format
         window_start = offset_start
         window_end = offset_start + window_duration_in_seconds
+        print(f"> Analyze {window_start} - {window_end}")
         chunk_path = create_16khz_mono_wav_from_video(
             input_path,
             window_start,
             window_end,
             working_dir)
 
-        if intro_audio_path is None:
-            clipped_video: str = clip_video(window_start, window_end, input_path)
-            keyframes: List[str] = extract_keyframes(clipped_video)
-            teams = team_recognition(keyframes)
-            intro_audio_path = text_to_speech(f"{teams[0]} vs {teams[1]}. Highlights by Meta & Groq")
-            intro_duration = get_video_duration_in_seconds(intro_audio_path)
-            print(f"Intro Audio: {intro_audio_path}")
-
         # transcribe audio chunk using groq API
         transcript: List[TranscriptionSegment] = transcribe(chunk_path)
+
         os.remove(chunk_path)
 
-        # detect highlights in rolling window to identify key moments
+        # detect highlights in a rolling window to identify key moments
         highlights: List[BasketballEvent] = detect(transcript, offset_start)
+        print(f"Found {len(highlights)} highlights")
 
-        # update offset start for next rolling window
+        # update offset start for the next rolling window
         offset_start += window_duration_in_seconds
 
-        # Dont continue if there are no highlights
+        # Don't continue if there are no highlights
         if len(highlights) == 0: continue
 
         # Find the text segments relevant to these highlights
         highlight_transcripts: List[TranscriptionSegment] = get_transcripts_for_highlights(transcript, highlights)
 
+        # Remember the highlights for the full summary later
+        all_transcripts.extend(highlight_transcripts)
+
         # Generate a clean summary for tts
-        # summary = highlight_summary(highlight_transcripts, SummaryLength.MEDIUM)
+        summary = highlight_summary(highlight_transcripts, SummaryLength.LONG)
+        print("Generated highlight summary")
 
         # Generate TTS
-        # tts_path = text_to_speech(summary)
+        summary_tts_path = text_to_speech(summary)
+        print(f"Created TTS for summary at {summary_tts_path}")
 
         # encode video clips using ffmpeg
+        video_clip_path = produce_highlight_clip(input_path, highlights, intro_audio_path, intro_duration)
+        print(f"Produced video highlight clip: {video_clip_path}")
+        audio_clip_path = produce_audio_highlight(intro_audio_path, summary_tts_path)
+        print(f"Generated audio highlight clip {audio_clip_path}")
 
-        clip_path = produce_highlight_clip(input_path, highlights, intro_audio_path, working_dir, intro_duration)
+    # Generate a full summary for the whole match
+    print("Generating audio summary for the whole match.. ")
+    full_summary: str = highlight_summary(all_transcripts, SummaryLength.XXL)
+    # Create TTS for it
+    full_summary_tts_path: str = text_to_speech(full_summary, "full-summary")
+    print(f"Full summary generated at {full_summary_tts_path}")
 
-        # public clips to configured distribution channels
-        publish_clip(clip_path)
+
+def produce_audio_highlight(intro_audio_path: str, summary_audio_path: str) -> str:
+    # Generate TTS for summary
+    # ffmpeg command to combine background radio with intro and summary audio
+    timestamp = str(int(time.time()))
+    output_path = os.path.join(get_temp_path("highlights-audio"), f"audio-highlight-{timestamp}.mp3")
+
+    cmd = [
+        "ffmpeg",
+        "-i", intro_audio_path,
+        "-i", summary_audio_path,
+        "-y",
+        output_path
+    ]
+
+    subprocess.run(cmd, check=True, capture_output=True)
+    print(f"Audio highlight: {output_path}")
+    return output_path
 
 
 def ensure_llama_hoops_dir():
@@ -138,7 +168,6 @@ def parse_cli_args():
     parser.add_argument('-input', nargs='?', default='lakers_mavs_20250409.mp4', help='Input video of an NBA match.')
     parser.add_argument('-wd', nargs='?', default=ensure_llama_hoops_dir(), help='Data working directory.')
     args = parser.parse_args()
-    print(args)
     return args
 
 

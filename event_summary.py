@@ -12,11 +12,14 @@ def highlight_summary(transcripts: List[TranscriptionSegment], length=SummaryLen
     transcription_json = json.dumps([item.to_dict() for item in transcripts])
     base_prompt = load_prompt_file("prompts/event_summary_prompt.md")
 
+    event_summary_xxl_prompt = load_prompt_file("prompts/event_summary_duration/event_summary_xxl_prompt.md")
     event_summary_long_prompt = load_prompt_file("prompts/event_summary_duration/event_summary_long_prompt.md")
     event_summary_medium_prompt = load_prompt_file("prompts/event_summary_duration/event_summary_medium_prompt.md")
     event_summary_short_prompt = load_prompt_file("prompts/event_summary_duration/event_summary_short_prompt.md")
     length_prompt = ""
-    if length == SummaryLength.LONG:
+    if length == SummaryLength.XXL:
+        length_prompt = event_summary_xxl_prompt
+    elif length == SummaryLength.LONG:
         length_prompt = event_summary_long_prompt
     elif length == SummaryLength.MEDIUM:
         length_prompt = event_summary_medium_prompt
@@ -44,4 +47,4 @@ def highlight_summary(transcripts: List[TranscriptionSegment], length=SummaryLen
 if __name__ == "__main__":
     from test_data.demo_transcript import demo_transcript
     result = highlight_summary(demo_transcript, SummaryLength.MEDIUM)
-    print(result)
+    print(f"Event Summary: {result}")
