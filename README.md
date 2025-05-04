@@ -24,7 +24,7 @@ LlamaCon Hackathon 2025 Project using Llama API and Groq Inferencing to extract 
 ## 📺 outputs
 - Individual clips from each highlight detected
 - Full game narrated audio-only sumary of all highlights
-- preview of a foul highlight clip with sponsor overlay<br>
+- Preview of a foul highlight clip with sponsor overlay<br>
   ![foul highlight clip](assets/preview_foul_highlight.gif)
 
 ## ⚽🏈🎾 Supporting other sports
