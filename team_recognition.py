@@ -1,14 +1,11 @@
 import json
 import os
-import base64
 from typing import List
-
+from utils_av import chunk_list
+from utils_llm import load_prompt_file
 from llama_api_client import LlamaAPIClient
-
 from schemas.teams_schema import TEAMS_SCHEMA
 from utils_images import base64_encode_image_file
-from utils_llm import load_prompt_file
-from utils_video import chunk_list
 
 client = LlamaAPIClient(api_key=os.environ.get("LLAMA_API_KEY"))
 

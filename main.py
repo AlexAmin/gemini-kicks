@@ -1,12 +1,10 @@
 import os
 import argparse
 import tempfile
-import time
 from typing import List
-from os.path import join as path_join
-
 from clip_video import clip_video
 from event_detection import detect
+from os.path import join as path_join
 from event_summary import highlight_summary
 from extract_keyframes import extract_keyframes
 from models.summary_length import SummaryLength
@@ -17,13 +15,12 @@ from team_recognition import team_recognition
 from text_to_speech import text_to_speech
 from util_io import get_temp_path
 from utils_llm import get_transcripts_for_highlights
-from utils_video import \
+from utils_av import \
     get_video_duration_in_seconds, \
     create_16khz_mono_wav_from_video, \
+    produce_audio_highlight, \
     overlay_video, \
     clip_segment
-import subprocess
-
 
 
 def produce_highlight_clip(input_path, highlights: List[BasketballEvent], intro_audio_path: str, intro_duration: float):
@@ -134,26 +131,6 @@ def process_video(input_path: str, working_dir: str):
     # Create TTS for it
     full_summary_tts_path: str = text_to_speech(full_summary, "full-summary")
     print(f"Full summary generated at {full_summary_tts_path}")
-
-
-def produce_audio_highlight(intro_audio_path: str, summary_audio_path: str) -> str:
-    # Generate TTS for summary
-    # ffmpeg command to combine background radio with intro and summary audio
-    timestamp = str(int(time.time()))
-    output_path = os.path.join(get_temp_path("highlights-audio"), f"audio-highlight-{timestamp}.mp3")
-
-    cmd = [
-        "ffmpeg",
-        "-i", intro_audio_path,
-        "-i", summary_audio_path,
-        "-filter_complex",
-        "[0:a][1:a]concat=n=2:v=0:a=1[out]",
-        "-map",
-        "[out]",
-        output_path
-    ]
-    subprocess.run(cmd, check=True, capture_output=True)
-    return output_path
 
 
 def ensure_llama_hoops_dir():

@@ -1,5 +1,7 @@
 import os
+import time
 import subprocess
+from util_io import get_temp_path
 
 def get_video_duration_in_seconds(path):
     command = [
@@ -92,6 +94,23 @@ def overlay_video(input_path, overlay_path, output_path, overlay_scale=1.0, intr
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"FFmpeg error: {e.stderr}") from e
 
+def produce_audio_highlight(intro_audio_path: str, summary_audio_path: str) -> str:
+    # Generate TTS for summary
+    # ffmpeg command to combine background radio with intro and summary audio
+    timestamp = str(int(time.time()))
+    output_path = os.path.join(get_temp_path("highlights-audio"), f"audio-highlight-{timestamp}.mp3")
+    cmd = [
+        "ffmpeg",
+        "-i", intro_audio_path,
+        "-i", summary_audio_path,
+        "-filter_complex",
+        "[0:a][1:a]concat=n=2:v=0:a=1[out]",
+        "-map",
+        "[out]",
+        output_path
+    ]
+    subprocess.run(cmd, check=True, capture_output=True)
+    return output_path
 
 def chunk_list(lst, n):
     """Split a list into chunks of size n"""
