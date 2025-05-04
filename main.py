@@ -35,7 +35,7 @@ def produce_highlight_clip(input_path, highlights: List[BasketballEvent], intro_
     latest_end = max([highlight.timestamp for highlight in highlights]) + 15
     # ffmpeg command to extract the highlights
     event_names = [highlight.type for highlight in highlights]
-    event_names = '_'.join(event_names)
+    event_names = '_'.join(event_names[:3])
     file_name = f"clip_{earlist_start}_{latest_end}_{event_names}.mp4"
     output_dir = get_temp_path("highlights-video")
     full_path = os.path.join(output_dir, file_name)
@@ -73,10 +73,10 @@ def process_video(input_path: str, working_dir: str):
 
     # Prepare Intro based on the first window in the video
     print("Preparing Intro Audio")
-    clipped_video: str = clip_video(0, window_duration_in_seconds, input_path)
+    clipped_video: str = clip_video(video_duration_in_seconds/2, (video_duration_in_seconds/2)+window_duration_in_seconds, input_path)
     keyframes: List[str] = extract_keyframes(clipped_video)
     teams = team_recognition(keyframes)
-    intro_audio_path = text_to_speech(f"{teams[0]}!! versus {teams[1]}!! Highlights! by meta and groq")
+    intro_audio_path = text_to_speech(f"{teams[0]} {teams[1]}!!!! Highlights with meta and groq")
     intro_duration = get_video_duration_in_seconds(intro_audio_path)
     print(f"Intro Audio Generated for {teams} @ {intro_audio_path}")
     all_transcripts: List[TranscriptionSegment] = []
@@ -115,7 +115,7 @@ def process_video(input_path: str, working_dir: str):
         all_transcripts.extend(highlight_transcripts)
 
         # Generate a clean summary for tts
-        summary = highlight_summary(highlight_transcripts, SummaryLength.LONG)
+        summary = highlight_summary(highlight_transcripts, SummaryLength.MEDIUM)
         print("Generated highlight summary")
 
         # Generate TTS
@@ -146,10 +146,12 @@ def produce_audio_highlight(intro_audio_path: str, summary_audio_path: str) -> s
         "ffmpeg",
         "-i", intro_audio_path,
         "-i", summary_audio_path,
-        "-y",
+        "-filter_complex",
+        "[0:a][1:a]concat=n=2:v=0:a=1[out]",
+        "-map",
+        "[out]",
         output_path
     ]
-
     subprocess.run(cmd, check=True, capture_output=True)
     return output_path
 
