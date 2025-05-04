@@ -1,7 +1,7 @@
-import json
 import os
+import json
 from typing import List
-from utils import load_prompt_file
+from utils_llm import load_prompt_file
 from llama_api_client import LlamaAPIClient
 from models.detection_result import DetectionResult
 from models.basketball_event import BasketballEvent

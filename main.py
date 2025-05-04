@@ -10,10 +10,10 @@ from models.transcription_segment import TranscriptionSegment
 from speech_to_text import transcribe
 from models.basketball_event import BasketballEvent
 from text_to_speech import text_to_speech
-from utils import \
+from utils_llm import get_transcripts_for_highlights
+from utils_video import \
     get_video_duration_in_seconds, \
     create_16khz_mono_wav_from_video, \
-    get_transcripts_for_highlights, \
     overlay_video, \
     clip_segment
 
@@ -77,14 +77,16 @@ def process_video(input_path: str, working_dir: str):
             working_dir)
 
         # transcribe audio chunk using groq API
-        transcript: List[TranscriptionSegment] = transcribe(chunk_path, offset_start)
+        transcript: List[TranscriptionSegment] = transcribe(chunk_path)
 
         # detect highlights in rolling window to identify key moments
         highlights: List[BasketballEvent] = detect(transcript, offset_start)
 
+        # update offset start for next rolling window
+        offset_start += window_duration_in_seconds
+
         # Dont continue if there are no highlights
-        if len(highlights) == 0:
-            continue
+        if len(highlights) == 0: continue
 
         # Find the text segments relevant to these highlights
         highlight_transcripts: List[TranscriptionSegment] = get_transcripts_for_highlights(transcript, highlights)
@@ -100,9 +102,6 @@ def process_video(input_path: str, working_dir: str):
         
         # public clips to configured distribution channels
         publish_clip(clip_path)
-
-        # update offset start for next rolling window
-        offset_start += window_duration_in_seconds
 
 
 def ensure_llama_hoops_dir():

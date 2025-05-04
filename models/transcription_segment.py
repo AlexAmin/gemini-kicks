@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import Dict
 from dataclasses import dataclass
 
 @dataclass(frozen=True)
@@ -14,7 +14,6 @@ class TranscriptionSegment:
 
     @classmethod
     def from_dict(cls, data: Dict) -> "TranscriptionSegment":
-
         return cls(
             timestamp=data["timestamp"],
             text=data["text"]

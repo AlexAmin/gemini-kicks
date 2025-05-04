@@ -1,16 +1,12 @@
 import json
 import os
 from typing import List
-
+from utils_llm import load_prompt_file
 from llama_api_client import LlamaAPIClient
-
 from models.summary_length import SummaryLength
 from models.transcription_segment import TranscriptionSegment
-from test_data.demo_transcript import demo_transcript
-from utils import load_prompt_file
 
 client = LlamaAPIClient(api_key=os.environ.get("LLAMA_API_KEY"))
-
 
 def highlight_summary(transcripts: List[TranscriptionSegment], length=SummaryLength.SHORT) -> str:
     transcription_json = json.dumps([item.to_dict() for item in transcripts])
@@ -46,5 +42,6 @@ def highlight_summary(transcripts: List[TranscriptionSegment], length=SummaryLen
     return output
 
 if __name__ == "__main__":
+    from test_data.demo_transcript import demo_transcript
     result = highlight_summary(demo_transcript, SummaryLength.MEDIUM)
     print(result)
