@@ -20,6 +20,7 @@ LlamaCon Hackathon 2025 Project using Llama API and Groq Inferencing to extract 
 - Video of an entire basketball match
   - During the hackathon, we used pre-recorded basketball games to simplify the developent.
   - Connecting a live stream should be easy, as the processing is done using a rolling window of video, very similar to chunks of video that would you would get from a live stream.
+  - For the LlamaCon hackathon, here are two sample videos you can use: https://drive.google.com/drive/folders/113JlvpxJtrerJKni16f_hTV2FYoZ9zPM?usp=sharing
 
 ## 📺 outputs
 - Individual clips from each highlight detected
