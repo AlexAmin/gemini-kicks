@@ -1,6 +1,6 @@
-![llama-hoops header picture](assets/github-header.jpg)
+![gemini-kicks header picture](assets/github-header.jpg)
 
-# llama-hoops
+# gemini-kicks
 LlamaCon Hackathon 2025 Project using Llama API and Groq Inferencing to extract Basketball Highlights and compose sports clips in real-time as well as a full game summaries.
 
 

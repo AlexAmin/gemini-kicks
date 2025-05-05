@@ -6,6 +6,7 @@ __pycache__/
 .DS_Store
 
 *.flac
+*.mp3
 *.mp4
 *.jpg
 *.iml

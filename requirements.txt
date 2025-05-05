@@ -1,4 +1,4 @@
-llama-api-client
-groq
+google-genai
 fastapi
 uvicorn
+google-cloud-texttospeech

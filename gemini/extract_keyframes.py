@@ -3,10 +3,10 @@ import subprocess
 import time
 from glob import glob
 from typing import List
+
+from gemini.prompting.team_recognition import team_recognition
 from utils_av import chunk_list
 from util_io import get_temp_path
-from team_recognition import team_recognition
-
 
 def extract_keyframes(input_path) -> List[str]:
     if not os.path.exists(input_path):

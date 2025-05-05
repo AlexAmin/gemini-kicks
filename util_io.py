@@ -9,7 +9,7 @@ TIMESTAMP = datetime.now().isoformat().replace(":", "_")
 
 
 def get_temp_path(subfolder: str | None = None) -> str:
-    path_components = [tempfile.gettempdir(), "llama-hoops", TIMESTAMP]
+    path_components = [tempfile.gettempdir(), "gemini-kicks", TIMESTAMP]
     if subfolder is not None:
         path_components.append(subfolder)
     output_dir = os.path.join(*path_components)

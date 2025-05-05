@@ -3,6 +3,7 @@ import time
 import subprocess
 from util_io import get_temp_path
 
+
 def get_video_duration_in_seconds(path):
     command = [
         'ffprobe',
@@ -12,9 +13,9 @@ def get_video_duration_in_seconds(path):
         path
     ]
     result = subprocess.run(
-        command, 
-        stdout=subprocess.PIPE, 
-        stderr=subprocess.PIPE, 
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
         text=True
     )
     duration_str = result.stdout.strip()
@@ -22,7 +23,7 @@ def get_video_duration_in_seconds(path):
         return float(duration_str)
     except ValueError:
         raise RuntimeError(f"Could not parse duration: {duration_str}")
-    
+
 
 def create_16khz_mono_wav_from_video(path, start_time, end_time, working_dir):
     output_path = os.path.join(working_dir, 'chunk.wav')
@@ -38,9 +39,9 @@ def create_16khz_mono_wav_from_video(path, start_time, end_time, working_dir):
         '-y', output_path
     ]
     result = subprocess.run(
-        command, 
-        stdout=subprocess.PIPE, 
-        stderr=subprocess.PIPE, 
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
         text=True
     )
     if result.returncode != 0:
@@ -60,15 +61,6 @@ def clip_segment(input_path, start_time, end_time, intro_audio_path: str, output
         "-ss", str(start_time),
         "-to", str(end_time),
         "-i", input_path,
-        "-i", intro_audio_path,
-        "-filter_complex",
-        "[0:a]volume=enable='gte(t,{duration_intro})'[delayed];[1:a][delayed]concat=n=2:v=0:a=1[aout]".format(
-            duration_intro=intro_duration
-        ),
-        "-map", "0:v",  # take video from first input
-        "-map", "[aout]",  # use combined audio
-        "-c:v", "copy",  # copy video codec
-        "-y",  # overwrite output file
         output_path
     ]
     result = subprocess.run(cmd, capture_output=True, text=True)
@@ -76,25 +68,30 @@ def clip_segment(input_path, start_time, end_time, intro_audio_path: str, output
         raise RuntimeError(f"FFmpeg error: {result.stderr}")
 
 
-def overlay_video(input_path, overlay_path, output_path, overlay_scale=1.0, intro_duration=1.0):
+def overlay_video(input_path, intro_audio_path, overlay_path, output_path, intro_duration=1.0):
     ffmpeg_command = [
         "ffmpeg",
-        "-loglevel", "error",
+        "-hwaccel", "videotoolbox",
         "-i", input_path,
+        "-hwaccel", "videotoolbox",
         "-i", overlay_path,
+        "-i", intro_audio_path,
         "-filter_complex",
-        "[1:v]scale=iw*"+str(overlay_scale)+":ih*"+str(overlay_scale)+"[scaled];"
-        "[0:v][scaled]overlay=x=(main_w-overlay_w)/2:y=(main_h-overlay_h)/2:enable='lte(t," + str(intro_duration) + ")'",
-        "-c:a", "copy",
-        "-y",
+        f"[0:v][1:v]overlay=(W-w)/2:(H-h)/2:enable='lte(t,{intro_duration})'[v_interim];[v_interim]scale=trunc(iw/2)*2:trunc(ih/2)*2[v_out];[0:a]asplit=2[a0_vol][a0_norm];[a0_vol]atrim=end={intro_duration},asetpts=PTS-STARTPTS,volume=0.15[a0_vol_trim];[a0_norm]atrim=start={intro_duration},asetpts=PTS-STARTPTS[a0_norm_trim];[2:a]atrim=end={intro_duration},asetpts=PTS-STARTPTS[a2_trim];[a0_vol_trim][a2_trim]amix=inputs=2:duration=longest[a_mixed_initial];[a_mixed_initial][a0_norm_trim]concat=v=0:a=1[a_out]",
+        "-map", "[v_out]",
+        "-map", "[a_out]",
+        "-c:v", "h264_videotoolbox",
         output_path
+
     ]
+    print(" ".join(ffmpeg_command))
     try:
-        subprocess.run(ffmpeg_command)
+        subprocess.run(ffmpeg_command, capture_output=True, check=True)
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"FFmpeg error: {e.stderr}") from e
 
-def produce_audio_highlight(intro_audio_path: str, summary_audio_path: str) -> str:
+
+def produce_audio_summary(intro_audio_path: str, summary_audio_path: str) -> str:
     # Generate TTS for summary
     # ffmpeg command to combine background radio with intro and summary audio
     timestamp = str(int(time.time()))
@@ -111,6 +108,7 @@ def produce_audio_highlight(intro_audio_path: str, summary_audio_path: str) -> s
     ]
     subprocess.run(cmd, check=True, capture_output=True)
     return output_path
+
 
 def chunk_list(lst, n):
     """Split a list into chunks of size n"""

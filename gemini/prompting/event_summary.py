@@ -1,12 +1,13 @@
 import json
-import os
 from typing import List
-from utils_llm import load_prompt_file
-from llama_api_client import LlamaAPIClient
+
+from google.genai import types
+
+from gemini.gemini_client import gemini_client
 from models.summary_length import SummaryLength
 from models.transcription_segment import TranscriptionSegment
+from utils_llm import load_prompt_file
 
-client = LlamaAPIClient(api_key=os.environ.get("LLAMA_API_KEY"))
 
 def highlight_summary(transcripts: List[TranscriptionSegment], length=SummaryLength.SHORT) -> str:
     transcription_json = json.dumps([item.to_dict() for item in transcripts])
@@ -27,22 +28,25 @@ def highlight_summary(transcripts: List[TranscriptionSegment], length=SummaryLen
         length_prompt = event_summary_short_prompt
 
     prompt = base_prompt.replace("{LENGTH_PROMPT}", length_prompt)
-    completion = client.chat.completions.create(
-        model="Llama-4-Maverick-17B-128E-Instruct-FP8",
-        messages=[
-            {
-                "role": "system",
-                "content": prompt
-            },
-            {
-                "role": "user",
-                "content": transcription_json
-            }
-        ],
-        temperature=0.7
+    completion = gemini_client.models.generate_content(
+        model="gemini-2.5-flash-preview-04-17",
+        config=types.GenerateContentConfig(
+            thinking_config=types.ThinkingConfig(thinking_budget=1024),
+            response_mime_type="text/plain",
+            system_instruction=prompt
+        ),
+        contents=[
+            types.Content(
+                role="user",
+                parts=[types.Part.from_text(text=transcription_json)]
+            ),
+
+        ]
     )
-    output = completion.completion_message.content.text
+
+    output = completion.text
     return output
+
 
 if __name__ == "__main__":
     from test_data.demo_transcript import demo_transcript

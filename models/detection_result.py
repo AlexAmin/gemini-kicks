@@ -1,9 +1,8 @@
 from typing import List
 from dataclasses import dataclass
-from models.basketball_event import BasketballEvent
+from models.soccer_event import SoccerEvent
 
 @dataclass
 class DetectionResult:
-    trainOfThought: str
-    events: List[BasketballEvent]
+    events: List[SoccerEvent]
     

@@ -1,22 +1,16 @@
-
-from models.basketball_event import BasketballEvent
-from models.basketball_event_type import BasketballEventType
+from models.soccer_event import SoccerEvent
+from models.soccer_event_type import SoccerEventTypes
 
 PLAYERS_SCHEMA = {
-    "type": "json_schema",
-    "json_schema": {
-        "schema": {
-            "properties": {
-                "players": {
-                    "type": "array",
-                    "items": {
-                        "type": "string",
-                        "description": "Each item in the array is the name of one player",
-                    },
-                },
+    "type": "object",
+    "required": ["players"],
+    "properties": {
+        "players": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "description": "Each item in the array is the name of one player",
             },
-            "required": ["players"],
-            "type": "object"
-        }
-    }
+        },
+    },
 }
