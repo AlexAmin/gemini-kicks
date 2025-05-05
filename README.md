@@ -1,36 +1,34 @@
-![gemini-kicks header picture](assets/github-header.jpg)
-
 # gemini-kicks
-LlamaCon Hackathon 2025 Project using Llama API and Groq Inferencing to extract Basketball Highlights and compose sports clips in real-time as well as a full game summaries.
+Initially built as a LlamaCon Hackathon 2025 Project using Llama API and Groq Inferencing to extract Basketball Highlights and compose sports clips in real-time as well as a full game summaries.
+Reworked for Gemini and Soccer.
 
 
-🦙 where LLama API and Groq are used:
-- **event_detection.py** (Llama API - Multi-Image Understanding, Chat Completion with Structured Output & Train-of-Thought)
-- **speech_to_text.py** (Groq - Transcription through Speech-to-Text)
-- **text_to_speech.py** (Groq - Voice over creation through Text-to-Speech)
+✨What Gemini does
+- **team_recognition.py** (gemini-2.5-flash-preview-04-17 to detect the names of the teams using 8 keyframes in the video)
+- **speech_to_text.py** (gemini-2.0-flash-lite to generate transcripts of the commentary of a soccer match - flash-light is used to save cost)
+- **event_detection.py** (gemini-2.5-flash-preview-04-17 with thinking to detect events in transcriptions)
+- **event_summary.py** (gemini-2.5-flash-preview-04-17 to summarize the entire match as a short podcast)
+- **player_recognition.py** (gemini-2.5-flash-preview-04-17 to detect player names involved in highlights based on transcripts)
+
+☁️Google Cloud
+- **text_to_speech.py** (Gemini has no direct TTS yet so we'll substitue using GCP)
 
 ## ⚡ type of events
-- Free Throws
-- Fouls
-- Steals
-- Turnovers
-- Timeouts
-- Substitutions
-
-## 🚀 demo video
-https://youtu.be/LMqbwFwGxaI
+- FOUL: A violation of the rules by a player.
+- PENALTY_KICK: A free kick awarded to the attacking team after a foul in the penalty area.
+- CORNER_KICK: A free kick awarded to the attacking team when the ball goes out of bounds over the defending team's goal line after being last touched by a defender.
+- THROW-IN: A method of restarting play when the ball has gone out over the touchline.
+- OFFSIDE: A rule violation where an attacking player is in an illegal position when the ball is played to them.
+- SUBSTITUTION: When one player is replaced by another player from the bench.
+- GOAL: When the ball completely crosses the goal line between the posts and under the crossbar.
+- YELLOW_CARD: A caution given to a player for committing a foul or misconduct.
 
 ## 📄 inputs
-- Video of an entire basketball match
-  - During the hackathon, we used pre-recorded basketball games to simplify the developent.
-  - Connecting a live stream should be easy, as the processing is done using a rolling window of video, very similar to chunks of video that would you would get from a live stream.
-  - For the LlamaCon hackathon, here are two sample videos you can use: https://drive.google.com/drive/folders/113JlvpxJtrerJKni16f_hTV2FYoZ9zPM?usp=sharing
+- Video of an entire soccer match
 
 ## 📺 outputs
-- Individual clips from each highlight detected
-- Full game narrated audio-only sumary of all highlights
-- Preview of a foul highlight clip with sponsor overlay<br>
-  ![foul highlight clip](assets/preview_foul_highlight.gif)
+- Individual clips from each highlight are detected with a sponsor overlay
+- Full game narrated audio-only summary of all highlights
 
 ## ⚽🏈🎾 supporting other sports
 - Adding support for other sports like football, soccer, tennis, is straight forward.
