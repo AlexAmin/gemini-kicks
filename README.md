@@ -29,7 +29,7 @@ Reworked for Gemini and Soccer.
 ## 📺 outputs
 - Individual clips from each highlight are detected with a sponsor overlay
 - Full game narrated audio-only summary of all highlights
-- Preview of a foul highlight clip with sponsor overlay<br>
+- Preview of a goal highlight clip with sponsor overlay<br>
     ![goal highlight clip](assets/preview-goal-highlight.gif)
 
 ## ⚽🏈🎾 supporting other sports
