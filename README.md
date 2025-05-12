@@ -1,16 +1,18 @@
+![gemini-kicks-header-picture](assets/github-header.jpg)
+
 # gemini-kicks
 Initially built as a LlamaCon Hackathon 2025 Project using Llama API and Groq Inferencing to extract Basketball Highlights and compose sports clips in real-time as well as a full game summaries.
 Reworked for Gemini and Soccer.
 
 
-✨What Gemini does
+✨ What Gemini does
 - **team_recognition.py** (gemini-2.5-flash-preview-04-17 to detect the names of the teams using 8 keyframes in the video)
 - **speech_to_text.py** (gemini-2.0-flash-lite to generate transcripts of the commentary of a soccer match - flash-light is used to save cost)
 - **event_detection.py** (gemini-2.5-flash-preview-04-17 with thinking to detect events in transcriptions)
 - **event_summary.py** (gemini-2.5-flash-preview-04-17 to summarize the entire match as a short podcast)
 - **player_recognition.py** (gemini-2.5-flash-preview-04-17 to detect player names involved in highlights based on transcripts)
 
-☁️Google Cloud
+☁️ Google Cloud
 - **text_to_speech.py** (Gemini has no direct TTS yet so we'll substitue using GCP)
 
 ## ⚡ type of events
@@ -33,9 +35,9 @@ Reworked for Gemini and Soccer.
     ![goal highlight clip](assets/preview-goal-highlight.gif)
 
 ## ⚽🏈🎾 supporting other sports
-- Adding support for other sports like football, soccer, tennis, is straight forward.
+- Adding support for other sports like football, basketball, tennis, is straight forward.
   - You need to identify the type of events that are relevant.
-    - example for soccer: goals, corner kicks, red and yellow cards.
+    - example for basketball: free-throw, foul, steal, turnover, timeout, substitution
   - Update the prompts defined inside the folder **/prompts** to make use of those events. 
 
 ## 🧑‍💻 contributors
